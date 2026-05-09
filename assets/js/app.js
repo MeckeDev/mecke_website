@@ -1,6 +1,30 @@
 /* ────────────────────────────────────────────────────────────
    STATE + PERSISTENCE
    ──────────────────────────────────────────────────────────── */
+const SECTION_ORDER = ['hero', 'services', 'recent', 'stack', 'how', 'contact'];
+
+function normalizeOrder(order) {
+  const seen = new Set();
+  const current = Array.isArray(order)
+    ? order.filter((key) => {
+        if (!SECTION_ORDER.includes(key) || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+    : [];
+  const merged = current.length ? current.slice() : SECTION_ORDER.slice();
+
+  SECTION_ORDER.forEach((key) => {
+    if (merged.includes(key)) return;
+    const defaultIndex = SECTION_ORDER.indexOf(key);
+    const insertAt = merged.findIndex((item) => SECTION_ORDER.indexOf(item) > defaultIndex);
+    if (insertAt === -1) merged.push(key);
+    else merged.splice(insertAt, 0, key);
+  });
+
+  return merged;
+}
+
 const DEFAULTS = {
   accent: 'amber', accentHex: null,
   font: 'mono',
@@ -8,7 +32,7 @@ const DEFAULTS = {
   density: 'normal',
   mode: 'dark',
   effects: { cursor: true, scanlines: false, vignette: true, glitch: true },
-  order: ['hero','services','recent', 'how','contact'],
+  order: SECTION_ORDER.slice(),
   _migrations: { scanlinesOff: true },
 };
 const STORE_KEY = 'mecke.dev:playground:v1';
@@ -25,6 +49,7 @@ function loadState() {
       merged.effects.scanlines = false;
       merged._migrations = Object.assign({}, mig, { scanlinesOff: true });
     }
+    merged.order = normalizeOrder(merged.order);
     return merged;
   } catch (e) { return structuredClone(DEFAULTS); }
 }
@@ -116,10 +141,22 @@ function applyOrder() {
   if (!main) return;
   const map = {};
   main.querySelectorAll('section[data-section]').forEach(s => map[s.dataset.section] = s);
+  state.order = normalizeOrder(state.order);
   state.order.forEach(key => { if (map[key]) main.appendChild(map[key]); });
+  Object.keys(map).forEach(key => {
+    if (!state.order.includes(key)) main.appendChild(map[key]);
+  });
 }
 function applyAll() {
   applyAccent(); applyFont(); applyBg(); applyDensity(); applyMode(); applyEffects(); applyOrder();
+}
+
+function restoreDefaults() {
+  if (typeof disablePhysics === 'function' && physicsOn) disablePhysics();
+  if (reorderOn) setReorder(false);
+  state = structuredClone(DEFAULTS);
+  applyAll();
+  saveState();
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -165,8 +202,7 @@ document.querySelectorAll('[data-toggle]').forEach(row => {
 });
 
 document.getElementById('btn-reset').addEventListener('click', () => {
-  state = structuredClone(DEFAULTS);
-  applyAll(); saveState();
+  restoreDefaults();
 });
 document.getElementById('btn-export').addEventListener('click', async () => {
   const cmds = [
@@ -391,6 +427,7 @@ const COMMANDS = {
       ['customize',        'open settings panel'],
       ['reorder',          'drag sections to reorder'],
       ['physics on/off',   'gravity mode — drag &amp; throw elements'],
+      ['voice on/off',     'speak commands like "open desktop"'],
       ['shake',            'kick everything around'],
       ['3d / world',       'enter the 3d playground (esc to exit)'],
       ['', ''],
@@ -413,14 +450,14 @@ const COMMANDS = {
     });
   },
   services: () => {
-    termWrite('services on offer:', 'hi');
+    termWrite('things I can ship:', 'hi');
     [
-      'website          — landing pages, dashboards, custom sites',
-      'script           — automation, glue code, "do this every X"',
-      'desktop_app      — windows / cross-platform native-feel apps',
-      'realtime_tool    — log monitors, live parsers, event helpers',
+      'website          — landing pages, dashboards, product sites',
+      'script           — automation, glue code, repeatable tasks',
+      'desktop_app      — windows / cross-platform native-feel tools',
+      'realtime_tool    — live parsers, monitors, overlays',
       'ai_workflow      — llm pipelines, agents, integrations',
-      'something_weird  — if it\'s code, ask',
+      'something_weird  — if it is code, ask',
     ].forEach(l => termWrite('  ' + l));
     document.getElementById('sec-services').scrollIntoView({ behavior: 'smooth' });
   },
@@ -455,9 +492,9 @@ const COMMANDS = {
     termWrite('  cookies  : <span style="color:var(--green)">none set</span> (no tracking here)');
   },
   about: () => {
-    termWrite('mecke — self-taught technical generalist.', 'hi');
-    termWrite('I build practical software: websites, scripts, desktop tools,');
-    termWrite('real-time systems, AI-assisted workflows. I work alone and ship fast.');
+    termWrite('mecke — technical generalist, builder, shipper.', 'hi');
+    termWrite('I make websites, automation, desktop tools, real-time systems,');
+    termWrite('and AI-assisted workflows for people who need the thing to work.');
   },
   date: () => termWrite(new Date().toString()),
   ls: () => {
@@ -614,8 +651,7 @@ const COMMANDS = {
   },
   konami: () => { matrixRain(); termWrite('// matrix unlocked', 'ok'); },
   reset: () => {
-    state = structuredClone(DEFAULTS);
-    applyAll(); saveState();
+    restoreDefaults();
     termWrite('all settings reset to default.', 'ok');
   },
   matrix: () => COMMANDS.mode(['matrix']),
@@ -968,6 +1004,13 @@ function setPhysicsToggleVisual(on) {
 document.getElementById('physics-toggle').addEventListener('click', () => {
   if (physicsOn) disablePhysics(); else enablePhysics();
 });
+const physicsReset = document.getElementById('physics-reset');
+if (physicsReset) {
+  physicsReset.addEventListener('click', () => {
+    disablePhysics();
+    termWrite('gravity reset. layout restored.', 'ok');
+  });
+}
 document.getElementById('btn-shake').addEventListener('click', () => {
   if (!physicsOn) enablePhysics();
   shakeAll();
@@ -1616,6 +1659,14 @@ document.querySelectorAll('.feat-card').forEach((card) => {
     else if (what === 'memory') enableGame('memory');
     else if (what === 'csguess') enableGame('csguess');
     else if (what === 'synthlab') enableGame('synthlab');
+    else if (what === 'voice') {
+      if (voiceOn) {
+        voiceStop();
+        termWrite('voice console stopped.', 'ok');
+      } else if (voiceStart()) {
+        termWrite("voice console listening. try saying 'open desktop' or 'theme cyber'.", 'ok');
+      }
+    }
     else if (what === 'physics') {
       if (!physicsOn) enablePhysics();
       else { disablePhysics(); enablePhysics(); }
@@ -3308,6 +3359,8 @@ GAME_INIT.g2048 = function () {
   for (let r = 0; r < G2_SIZE; r++) for (let c = 0; c < G2_SIZE; c++) {
     const cell = document.createElement('div');
     cell.className = 'g2048-cell';
+    cell.dataset.r = String(r);
+    cell.dataset.c = String(c);
     const { x, y } = g2Pos(r, c);
     cell.style.transform = 'translate(' + x + ', ' + y + ')';
     board.appendChild(cell);
@@ -3324,14 +3377,42 @@ GAME_INIT.g2048 = function () {
     if (Math.abs(dx) > Math.abs(dy)) g2Move(dx > 0 ? 'right' : 'left');
     else                              g2Move(dy > 0 ? 'down' : 'up');
   }, { passive: true });
+  window.addEventListener('resize', g2Relayout);
   g2New();
 };
 GAME_OPEN.g2048 = function () { /* nothing */ };
+function g2Metrics() {
+  const board = document.getElementById('g2-board');
+  if (!board) return { gap: 10, cell: 96 };
+  const cs = getComputedStyle(board);
+  const gap = parseFloat(cs.getPropertyValue('--gap')) || 10;
+  const cellFromVar = parseFloat(cs.getPropertyValue('--cell'));
+  const cell = Number.isFinite(cellFromVar)
+    ? cellFromVar
+    : Math.max(32, (board.clientWidth - gap * (G2_SIZE + 1)) / G2_SIZE);
+  return { gap, cell };
+}
 function g2Pos(r, c) {
-  // gap=10, cell=96; offset = gap*(c+1) + cell*c
-  const x = (10 * (c + 1) + 96 * c) + 'px';
-  const y = (10 * (r + 1) + 96 * r) + 'px';
+  const { gap, cell } = g2Metrics();
+  const x = (gap * (c + 1) + cell * c) + 'px';
+  const y = (gap * (r + 1) + cell * r) + 'px';
   return { x, y };
+}
+function g2Relayout() {
+  const board = document.getElementById('g2-board');
+  if (!board) return;
+  board.querySelectorAll('.g2048-cell').forEach((cell) => {
+    const { x, y } = g2Pos(+cell.dataset.r || 0, +cell.dataset.c || 0);
+    cell.style.transform = 'translate(' + x + ', ' + y + ')';
+  });
+  board.querySelectorAll('.g2048-tile').forEach((el) => {
+    const tile = g2State.tiles.find((t) => t.id === +el.dataset.id);
+    if (!tile) return;
+    const { x, y } = g2Pos(tile.r, tile.c);
+    el.style.setProperty('--x', x);
+    el.style.setProperty('--y', y);
+    el.style.transform = 'translate(' + x + ', ' + y + ')';
+  });
 }
 function g2New() {
   g2State.grid = Array.from({ length: G2_SIZE }, () => new Array(G2_SIZE).fill(null));
