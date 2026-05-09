@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>mecke.dev // playground</title>
+<meta name="description" content="Custom websites, scripts, tools, and automation — shipped fast. Tell me what you need built. This site is a tiny static bundle: zero build steps, zero dependency hell." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Geist:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css" />
+</head>
+<body data-bg="grid">
+
+<!-- background -->
+<div class="bg-pattern"></div>
+<canvas id="matrix-canvas"></canvas>
+<div class="vignette"></div>
+<div class="scanlines"></div>
+
+<!-- cursor -->
+<div class="cursor-ring"></div>
+<div class="cursor-dot"></div>
+
+<!-- boot overlay -->
+<div id="boot">
+  <div class="lines mono" id="boot-lines"></div>
+</div>
+
+<!-- top status bar -->
+<header class="topbar mono">
+  <div class="group">
+    <span class="lit">online</span>
+    <span class="hide-md sep">·</span>
+    <span class="hide-md">mecke@mecke.dev</span>
+  </div>
+  <div class="group right">
+    <span class="hide-sm" id="loc">— · —</span>
+    <span class="hide-sm sep">·</span>
+    <span id="clock">--:--:--</span>
+    <span class="sep">·</span>
+    <span>up <span id="uptime">00:00</span></span>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ─────────────── HERO ─────────────── -->
+<section class="hero" id="sec-hero" data-section="hero">
+  <span class="drag-handle">↕ drag</span>
+
+  <pre class="ascii-sig" aria-hidden="true">
+ ███╗   ███╗███████╗ ██████╗██╗  ██╗███████╗
+ ████╗ ████║██╔════╝██╔════╝██║ ██╔╝██╔════╝
+ ██╔████╔██║█████╗  ██║     █████╔╝ █████╗
+ ██║╚██╔╝██║██╔══╝  ██║     ██╔═██╗ ██╔══╝
+ ██║ ╚═╝ ██║███████╗╚██████╗██║  ██╗███████╗
+ ╚═╝     ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝   mecke.dev
+  </pre>
+
+  <h1 class="headline glitch">
+    Need <span class="q">a thing</span> built?<br/>
+    I'll build the thing.<span class="blink-caret">&nbsp;</span>
+  </h1>
+
+  <p class="lede">
+    Custom <strong>websites</strong>, <strong>scripts</strong>, <strong>desktop tools</strong>,
+    real-time things, weird automation, AI plumbing — basically anything
+    where someone has to actually sit down and code it.
+    Tell me what you need. I'll quote it, build it, ship it.
+  </p>
+
+  <div class="single-file-pitch mono" aria-label="static bundle note">
+    <span class="sfp-dot"></span>
+    <span class="sfp-text">
+      <b>this entire site</b> — terminal, voxel world, OS sandbox, four mini-games, CS2 trivia,
+      ~20k embedded items — ships as a <b class="accent">tiny static bundle</b>.
+    </span>
+    <span class="sfp-meta">plain html · css · js · no node_modules · no build</span>
+  </div>
+
+  <div class="term" id="term">
+    <div class="term-head mono">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="term-title">— mecke@mecke.dev · interactive shell</span>
+    </div>
+    <div class="term-body" id="term-body" tabindex="0">
+      <div class="term-line out">// hi. type <span style="color:var(--accent)">help</span> to see what this shell can do.</div>
+      <div class="term-line out">// or <span style="color:var(--accent)">customize</span> to redesign the page.</div>
+    </div>
+    <div class="term-input-row">
+      <span class="prompt mono">mecke@dev:~$</span>
+      <input id="term-input" class="term-input mono" autocomplete="off"
+             autocorrect="off" autocapitalize="off" spellcheck="false"
+             placeholder="try: theme matrix" />
+    </div>
+  </div>
+  <div class="term-hint mono">
+    <kbd>↑</kbd><kbd>↓</kbd> history · <kbd>tab</kbd> autocomplete · <kbd>esc</kbd> clear input
+  </div>
+
+  <div class="cta-row">
+    <a href="#sec-contact" class="btn primary">request a build <span class="arr">→</span></a>
+    <a href="#sec-services" class="btn">./services</a>
+    <a href="mailto:contact@mecke.dev" class="btn">cat email.txt</a>
+  </div>
+
+  <div class="features" id="sec-playground">
+    <div class="feat-card" data-launch="3d" tabindex="0">
+      <div class="feat-prev prev-3d"><div class="scene"><div class="cube">
+        <div class="face f1"></div><div class="face f2"></div>
+        <div class="face f3"></div><div class="face f4"></div>
+        <div class="face f5"></div><div class="face f6"></div>
+      </div></div></div>
+      <div class="feat-tag">live · 3d</div>
+      <h3>Voxel World</h3>
+      <p>A randomized first-person playground. Mine, place, and find every amber block to claim a reward.</p>
+      <div class="feat-meta"><span>three.js</span><span>FP camera</span><span>raycast</span><span>~30² grid</span></div>
+      <span class="feat-go">enter world <span class="arr">→</span></span>
+    </div>
+
+    <div class="feat-card" data-launch="physics" tabindex="0">
+      <div class="feat-prev prev-physics">
+        <div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div>
+      </div>
+      <div class="feat-tag">live · physics</div>
+      <h3>Gravity Mode</h3>
+      <p>Throw the entire page around. Every element becomes a rigid body — drag, fling, watch it tumble.</p>
+      <div class="feat-meta"><span>verlet</span><span>collision</span><span>drag · fling</span><span>type to undo</span></div>
+      <span class="feat-go">unleash gravity <span class="arr">→</span></span>
+    </div>
+
+    <div class="feat-card" data-launch="pc" tabindex="0">
+      <div class="feat-prev prev-pc">
+        <div class="mini m1"></div><div class="mini m2"></div><div class="mini m3"></div>
+        <div class="tb"></div>
+      </div>
+      <div class="feat-tag">live · desktop</div>
+      <h3>MECKE OS</h3>
+      <p>An in-browser sandbox OS with synth, paint, files, calc, terminal — all in draggable windows.</p>
+      <div class="feat-meta"><span>9 apps</span><span>fake fs</span><span>window mgr</span><span>boot screen</span></div>
+      <span class="feat-go">boot desktop <span class="arr">→</span></span>
+    </div>
+
+    <div class="feat-card" data-launch="wordle" tabindex="0">
+      <div class="feat-prev prev-wordle">
+        <span style="--i:0; --bgc:var(--accent);">M</span>
+        <span style="--i:1; --bgc:#b59f3b;">E</span>
+        <span style="--i:2; --bgc:#2a2c33;">C</span>
+        <span style="--i:3; --bgc:var(--accent);">K</span>
+        <span style="--i:4; --bgc:var(--accent);">E</span>
+      </div>
+      <div class="feat-tag">play · word</div>
+      <h3>Wordle</h3>
+      <p>Six guesses, five letters. Flip-tile reveals, on-screen keyboard, hand-curated word list — pure DOM, no libs.</p>
+      <div class="feat-meta"><span>CSS 3D</span><span>keyboard</span><span>stagger fx</span><span>~200 words</span></div>
+      <span class="feat-go">start guessing <span class="arr">→</span></span>
+    </div>
+
+    <div class="feat-card" data-launch="sudoku" tabindex="0">
+      <div class="feat-prev prev-sudoku" id="prev-sudoku-grid"></div>
+      <div class="feat-tag">play · logic</div>
+      <h3>Sudoku</h3>
+      <p>Procedurally generated 9×9 puzzles with peer highlighting, pencil notes, conflict detection, and a victory flash.</p>
+      <div class="feat-meta"><span>generator</span><span>3 levels</span><span>pencil mode</span><span>solver</span></div>
+      <span class="feat-go">solve a board <span class="arr">→</span></span>
+    </div>
+
+    <div class="feat-card" data-launch="g2048" tabindex="0">
+      <div class="feat-prev prev-2048">
+        <span style="--d:0s">2</span><span style="--d:0.4s">4</span><span style="--d:0.8s">8</span><span style="--d:1.2s">16</span>
+        <span style="--d:0.2s">4</span><span style="--d:0.6s">8</span><span style="--d:1s">16</span><span style="--d:1.4s">32</span>
+        <span style="--d:0.4s">8</span><span style="--d:0.8s">16</span><span style="--d:1.2s">32</span><span style="--d:1.6s">64</span>
+        <span style="--d:0.6s">16</span><span style="--d:1s">32</span><span style="--d:1.4s">64</span><span style="--d:1.8s">128</span>
+      </div>
+      <div class="feat-tag">play · puzzle</div>
+      <h3>2048</h3>
+      <p>Slide tiles with arrows or WASD. Smooth merge animations, score tracking, swipe support — get to the orange tile.</p>
+      <div class="feat-meta"><span>raf-loop</span><span>swipe</span><span>persisted hi-score</span></div>
+      <span class="feat-go">slide tiles <span class="arr">→</span></span>
+    </div>
+
+    <div class="feat-card" data-launch="memory" tabindex="0">
+      <div class="feat-prev prev-memory">
+        <span style="--d:0s">★</span><span style="--d:0.3s">◆</span><span style="--d:0.6s">●</span><span style="--d:0.9s">▲</span>
+        <span style="--d:0.15s">✦</span><span style="--d:0.45s">◇</span><span style="--d:0.75s">◐</span><span style="--d:1.05s">▼</span>
+      </div>
+      <div class="feat-tag">play · memory</div>
+      <h3>Memory Match</h3>
+      <p>Eight pairs, hidden behind 3D-flipping cards. Track moves, beat your time, savour the matched-pair pulse.</p>
+      <div class="feat-meta"><span>CSS 3D flip</span><span>timer</span><span>moves</span><span>shuffle</span></div>
+      <span class="feat-go">flip a card <span class="arr">→</span></span>
+    </div>
+
+    <div class="feat-card" data-launch="csguess" tabindex="0">
+      <div class="feat-prev prev-csguess">
+        <div class="csg-prev-frame">
+          <div class="csg-prev-blur"></div>
+          <div class="csg-prev-scan"></div>
+        </div>
+        <div class="csg-prev-dots"><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="feat-tag">play · cs2 trivia</div>
+      <h3>CS_Guess</h3>
+      <p>Identify a blurred Counter-Strike 2 item — skin, sticker, agent, knife — in six attempts. Hints unlock as the image declassifies.</p>
+      <div class="feat-meta"><span>~20k items</span><span>gzip+base64</span><span>fully offline</span><span>steam CDN</span></div>
+      <span class="feat-go">enter briefing <span class="arr">→</span></span>
+    </div>
+
+    <div class="feat-card" data-launch="synthlab" tabindex="0">
+      <div class="feat-prev prev-synthlab" style="background:#0c0f15; display:flex; align-items:flex-end; gap:2px; padding:18px 14px;">
+        <span style="flex:1; height:30%; background:linear-gradient(0deg,var(--accent),rgba(255,174,92,0.3));"></span>
+        <span style="flex:1; height:55%; background:linear-gradient(0deg,var(--accent),rgba(255,174,92,0.3));"></span>
+        <span style="flex:1; height:80%; background:linear-gradient(0deg,var(--accent),rgba(255,174,92,0.3));"></span>
+        <span style="flex:1; height:45%; background:linear-gradient(0deg,var(--accent),rgba(255,174,92,0.3));"></span>
+        <span style="flex:1; height:65%; background:linear-gradient(0deg,var(--accent),rgba(255,174,92,0.3));"></span>
+        <span style="flex:1; height:35%; background:linear-gradient(0deg,var(--accent),rgba(255,174,92,0.3));"></span>
+        <span style="flex:1; height:70%; background:linear-gradient(0deg,var(--accent),rgba(255,174,92,0.3));"></span>
+        <span style="flex:1; height:50%; background:linear-gradient(0deg,var(--accent),rgba(255,174,92,0.3));"></span>
+      </div>
+      <div class="feat-tag">tool · web-audio</div>
+      <h3>Synth Lab</h3>
+      <p>A full polyphonic synthesiser — three oscillators, dual envelopes, dual LFOs, multi-mode filter, FX rack, arpeggiator, sequencer, drum machine, MIDI input, and recording. Built on the Web Audio API.</p>
+      <div class="feat-meta"><span>3-osc</span><span>FX chain</span><span>16-step seq</span><span>WebMIDI</span><span>presets</span></div>
+      <span class="feat-go">open the lab <span class="arr">→</span></span>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── SERVICES ─────────────── -->
+<section id="sec-services" data-section="services">
+  <span class="drag-handle">↕ drag</span>
+  <div class="filename mono"><span class="num">01</span> services.txt</div>
+
+  <h2 class="section-h" data-scramble>What I'll <span class="accent">build for you</span>.</h2>
+  <p class="section-sub">
+    No retainers, no monthly minimums. One-off projects, paid by scope.
+    If your thing fits a box below, ask. If it doesn't, ask anyway.
+  </p>
+
+  <div class="listing">
+    <div class="listing-head">
+      <span>pid</span><span>service</span><span>what that means</span><span>timeline</span><span>status</span>
+    </div>
+    <div class="listing-row">
+      <span class="pid">001</span><span class="name">website</span>
+      <span class="desc">Landing page, single-page site, marketing page, portfolio, custom dashboard, internal tool. Whatever shape it needs to be.</span>
+      <span class="meta">3d–3wk</span><span class="status">accepting</span>
+    </div>
+    <div class="listing-row">
+      <span class="pid">002</span><span class="name">script</span>
+      <span class="desc">A small thing that watches a folder, scrapes a site, renames files, syncs data, posts to Slack — automating the boring task you keep doing manually.</span>
+      <span class="meta">hours–days</span><span class="status">accepting</span>
+    </div>
+    <div class="listing-row">
+      <span class="pid">003</span><span class="name">desktop_app</span>
+      <span class="desc">Native-feeling apps for Windows or cross-platform. WPF / .NET, or Tauri + Svelte if you want lean and modern.</span>
+      <span class="meta">2–6wk</span><span class="status">accepting</span>
+    </div>
+    <div class="listing-row">
+      <span class="pid">004</span><span class="name">realtime_tool</span>
+      <span class="desc">Logfile monitors, live parsers, event-driven helpers, anything that has to react to a stream of stuff happening right now.</span>
+      <span class="meta">1–3wk</span><span class="status">accepting</span>
+    </div>
+    <div class="listing-row">
+      <span class="pid">005</span><span class="name">ai_workflow</span>
+      <span class="desc">LLM-powered pipelines, custom agents, tool-augmented flows. Less "let's add a chatbot", more "this saves hours per week".</span>
+      <span class="meta">1–4wk</span><span class="status">accepting</span>
+    </div>
+    <div class="listing-row">
+      <span class="pid">006</span><span class="name">something_weird</span>
+      <span class="desc">Niche hardware glue, gaming utility, NixOS configuration, knowledge graph, data ontology. If it's code, ask.</span>
+      <span class="meta">depends</span><span class="status">ask</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── RECENT ─────────────── -->
+<section id="sec-recent" data-section="recent">
+  <span class="drag-handle">↕ drag</span>
+  <div class="filename mono"><span class="num">02</span> recent.log</div>
+
+  <h2 class="section-h" data-scramble>A few things I've <span class="accent">already shipped</span>.</h2>
+  <p class="section-sub">Not a full portfolio — just enough to show I actually finish things.</p>
+
+  <div class="log-list">
+    <div class="log-entry">
+      <span class="date">// recent</span>
+      <span class="level ship">[ship]</span>
+      <span class="msg">Real-time Counter-Strike chat translator. <span class="lo">Tails game logs, parses incoming chat events, translates on the fly, displays in a desktop overlay. Event-driven, no polling.</span></span>
+    </div>
+    <div class="log-entry">
+      <span class="date">// recent</span>
+      <span class="level ship">[ship]</span>
+      <span class="msg">Vorsorge — Tauri + Svelte desktop app. <span class="lo">Cross-platform, lean, native feel. Modern frontend pattern wired to a Rust backend.</span></span>
+    </div>
+    <div class="log-entry">
+      <span class="date">// recent</span>
+      <span class="level ship">[ship]</span>
+      <span class="msg">Pin collection platform. <span class="lo">Filtering, sponsor integration, responsive layout, dynamic UI. Built around how collectors actually browse.</span></span>
+    </div>
+    <div class="log-entry">
+      <span class="date">// recent</span>
+      <span class="level info">[wip ]</span>
+      <span class="msg">Knowledge graph &amp; documentation system. <span class="lo">Ontology-shaped notes for games, devs, locations, easter eggs, media. Cross-referenced and queryable.</span></span>
+    </div>
+    <div class="log-entry">
+      <span class="date">// ongoing</span>
+      <span class="level note">[note]</span>
+      <span class="msg">Plus a pile of personal scripts, NixOS configs, and tooling I won't bore you with. <span class="lo">Happy to walk you through any of it on a call.</span></span>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── STACK / MANIFESTO ─────────────── -->
+<section id="sec-stack" data-section="stack">
+  <span class="drag-handle">↕ drag</span>
+  <div class="filename mono"><span class="num">03</span> stack.txt</div>
+
+  <h2 class="section-h" data-scramble>Small bundle. <span class="accent">Zero ceremony</span>.</h2>
+  <p class="section-sub">
+    Most "modern" personal sites are 12 megs of npm output before you read a single word.
+    This one isn't. Look around — what you're reading, the terminal, the voxel world,
+    the OS sandbox, four mini-games and a CS2 trivia game with ~20k embedded items
+    are all plain static files. View source. Save it. Open it offline. It still works.
+  </p>
+
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="stack-num mono">// 01</div>
+      <h3>Modular static files.</h3>
+      <p>Structure, styles, behavior, and the embedded CS2 item registry are split by job now. <code>view-source:</code> still shows you everything. No hidden app server, no service worker, no "buy our SaaS to host this".</p>
+      <div class="stack-meta mono">
+        <span>index.html</span><span>assets/css</span><span>assets/js</span>
+      </div>
+    </div>
+
+    <div class="stack-card">
+      <div class="stack-num mono">// 02</div>
+      <h3>Zero build step.</h3>
+      <p>No webpack. No vite. No "tsc". No <code>node_modules</code> with 87,412 transitive dependencies and a CVE every Tuesday. Edit. Refresh. That's the build system.</p>
+      <div class="stack-meta mono">
+        <span>no bundler</span><span>no transpile</span><span>no CI minute burn</span>
+      </div>
+    </div>
+
+    <div class="stack-card">
+      <div class="stack-num mono">// 03</div>
+      <h3>Hand-coded. No frameworks.</h3>
+      <p>Vanilla JS, custom CSS. Three.js for the voxel world is the only third-party dep. The OS sandbox windowing, the mini-games, the terminal — all built from scratch. You'd be surprised what fits in small static files when nobody pulls in 40 abstraction layers.</p>
+      <div class="stack-meta mono">
+        <span>vanilla js</span><span>three.js</span><span>web audio · canvas</span>
+      </div>
+    </div>
+
+    <div class="stack-card">
+      <div class="stack-num mono">// 04</div>
+      <h3>This is what I'll do for you.</h3>
+      <p>I'll match the constraint to the job. Sometimes that's "one HTML file you can email a client". Sometimes it's a Tauri+Svelte desktop app, or a real-time websocket pipeline, or a script that quietly runs at 03:00. The point is: lean stack, ships fast, no maintenance tax.</p>
+      <div class="stack-meta mono">
+        <span>right tool</span><span>small surface</span><span>actually finished</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stack-cta">
+    <a href="#sec-contact" class="btn primary">request a build <span class="arr">→</span></a>
+    <a href="mailto:contact@mecke.dev" class="btn">contact@mecke.dev</a>
+  </div>
+</section>
+
+<!-- ─────────────── HOW ─────────────── -->
+<section id="sec-how" data-section="how">
+  <span class="drag-handle">↕ drag</span>
+  <div class="filename mono"><span class="num">04</span> process.md</div>
+
+  <h2 class="section-h" data-scramble>How it actually <span class="accent">works</span>.</h2>
+  <p class="section-sub">No fluff. No 14-step "discovery framework". Here's the loop.</p>
+
+  <div class="log-list">
+    <div class="log-entry">
+      <span class="date mono">[step 1]</span><span class="level info">tell</span>
+      <span class="msg">You email me what's broken / missing / annoying. A paragraph is enough. Screenshots help.</span>
+    </div>
+    <div class="log-entry">
+      <span class="date mono">[step 2]</span><span class="level info">scope</span>
+      <span class="msg">I reply within ~24h with: is this a fit, rough timeline, fixed price or hourly, what I'd need from you. No proposal docs.</span>
+    </div>
+    <div class="log-entry">
+      <span class="date mono">[step 3]</span><span class="level info">build</span>
+      <span class="msg">We agree, I build. You see progress as it lands — not at the end. Adjustments mid-flight are normal.</span>
+    </div>
+    <div class="log-entry">
+      <span class="date mono">[step 4]</span><span class="level ship">ship</span>
+      <span class="msg">You get the working thing + source + a short handover note. Small fixes after delivery are on me.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── CONTACT ─────────────── -->
+<section id="sec-contact" data-section="contact">
+  <span class="drag-handle">↕ drag</span>
+  <div class="filename mono"><span class="num">05</span> contact.sh</div>
+
+  <h2 class="section-h" data-scramble>Tell me what <span class="accent">you need</span>.</h2>
+  <p class="section-sub">A few sentences is enough. I read everything and reply within a day.</p>
+
+  <div class="contact-block">
+    <div class="hint mono"><span class="pulse">●</span> awaiting input · this opens your mail client</div>
+
+    <form id="contact-form">
+      <div class="contact-grid">
+        <div class="field">
+          <label for="cf-name">name</label>
+          <input id="cf-name" type="text" placeholder="who's writing" required />
+        </div>
+        <div class="field">
+          <label for="cf-kind">what you need</label>
+          <input id="cf-kind" type="text" placeholder="website / script / tool / weird thing" required />
+        </div>
+      </div>
+      <div class="field">
+        <label for="cf-msg">describe it</label>
+        <textarea id="cf-msg" placeholder="What's the goal? What's it doing now? What should it do? Any deadlines or constraints?" required></textarea>
+      </div>
+      <div class="contact-bottom">
+        <span class="or-direct mono">
+          or just email <a href="mailto:contact@mecke.dev">contact@mecke.dev</a>
+        </span>
+        <button type="submit" class="btn primary">send <span class="arr">→</span></button>
+      </div>
+    </form>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="left">
+      © <span id="year"></span> mecke · <a href="mailto:contact@mecke.dev">contact@mecke.dev</a>
+    </div>
+    <div style="text-align: right;">
+      <div>try <span style="color: var(--accent)">↑↑↓↓←→←→ba</span> if you're bored</div>
+      <div style="margin-top: 6px;">no analytics · no cookies · no tracking</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ─────────────── REORDER BANNER ─────────────── -->
+<div class="reorder-banner mono">↕ reorder mode · drag sections to rearrange · click again to exit</div>
+
+<!-- ─────────────── PHYSICS BANNER + FLOOR ─────────────── -->
+<div class="physics-banner mono">⚡ physics mode · drag and throw · type <span style="text-decoration: underline">physics off</span> to stop</div>
+<div class="physics-floor"></div>
+
+<!-- ─────────────── 3D STAGE ─────────────── -->
+<div class="three-stage" id="three-stage">
+  <canvas id="three-canvas"></canvas>
+  <div class="three-hud">
+    <div class="three-panel three-score-card">
+      <div class="three-score-label">amber found</div>
+      <div class="three-score" id="three-score">0 / 0</div>
+    </div>
+    <button class="three-panel three-exit" id="three-exit">esc · exit world</button>
+    <div class="three-panel three-help">
+      <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · <kbd>SPACE</kbd> jump · <kbd>MOUSE</kbd> look · <kbd>LMB</kbd> mine · <kbd>RMB</kbd> place · <kbd>1</kbd>–<kbd>7</kbd> select</div>
+      <div style="opacity: 0.7; margin-top: 4px;">click canvas to capture mouse · find every amber block to claim a reward</div>
+    </div>
+    <div class="three-crosshair" id="three-crosshair"></div>
+    <div class="three-hotbar" id="three-hotbar"></div>
+    <div class="three-toast" id="three-toast"></div>
+    <div class="three-victory" id="three-victory">
+      <div class="vt">★ ALL AMBER COLLECTED ★</div>
+      <div class="vsub">a monument has been raised at spawn. you found every block — that's the kind of curiosity I want to work with.</div>
+      <div class="vbtns">
+        <a class="vbtn" id="three-victory-email" href="mailto:contact@mecke.dev?subject=I%20beat%20your%203d%20game&body=collected%20every%20amber%20block%20in%20the%20voxel%20world.%0A%0AI%20am%20looking%20for%20someone%20to%20build%3A%0A%0A">claim · email me</a>
+        <button class="vbtn secondary" id="three-victory-close">keep playing</button>
+      </div>
+    </div>
+  </div>
+  <div class="three-loading" id="three-loading">
+    <div class="spinner"></div>
+    <div class="label">loading 3d engine...</div>
+  </div>
+</div>
+
+<!-- ─────────────── PC / DESKTOP STAGE ─────────────── -->
+<div class="pc-stage" id="pc-stage">
+  <div class="pc-boot" id="pc-boot" style="display:none;">
+    <div class="brand">▣ MECKE OS</div>
+    <div class="ver">v1.0 · sandbox · static build</div>
+    <div class="lines" id="pc-boot-lines"></div>
+    <div class="progress"><div class="bar" id="pc-boot-bar"></div></div>
+  </div>
+  <button class="pc-exit" id="pc-exit">esc · exit desktop</button>
+  <div class="pc-desktop" id="pc-desktop">
+    <div class="pc-icons" id="pc-icons">
+      <div class="pc-icon" data-app="files"    tabindex="0"><div class="glyph">F</div><div class="label">Files</div></div>
+      <div class="pc-icon" data-app="calc"     tabindex="0"><div class="glyph">=</div><div class="label">Calculator</div></div>
+      <div class="pc-icon" data-app="notepad"  tabindex="0"><div class="glyph">A</div><div class="label">Notepad</div></div>
+      <div class="pc-icon" data-app="paint"    tabindex="0"><div class="glyph">/\\</div><div class="label">Paint</div></div>
+      <div class="pc-icon" data-app="synth"    tabindex="0"><div class="glyph">♪♪</div><div class="label">Synth</div></div>
+      <div class="pc-icon" data-app="snake"    tabindex="0"><div class="glyph">~~</div><div class="label">Snake</div></div>
+      <div class="pc-icon" data-app="mines"    tabindex="0"><div class="glyph">*</div><div class="label">Minesweeper</div></div>
+      <div class="pc-icon" data-app="terminal" tabindex="0"><div class="glyph">$_</div><div class="label">Terminal</div></div>
+      <div class="pc-icon" data-app="about"    tabindex="0"><div class="glyph">?</div><div class="label">About</div></div>
+    </div>
+    <div id="pc-windows"></div>
+  </div>
+  <div class="pc-taskbar">
+    <button class="pc-tb-start">▣ MECKE OS</button>
+    <div class="pc-tb-tasks" id="pc-tb-tasks"></div>
+    <div class="pc-tb-clock" id="pc-tb-clock">--:--</div>
+  </div>
+</div>
+
+
+<!-- ─────────────── MINIGAMES ─────────────── -->
+<div class="game-stage" id="game-wordle">
+  <div class="game-bar">
+    <div class="gb-l">
+      <span class="game-title">wordle</span>
+      <span class="game-sub">guess <b id="wordle-num">1</b>/6 · streak <b id="wordle-streak">0</b></span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="game-exit" id="wordle-new">↻ new word</button>
+      <button class="game-exit" id="wordle-exit">esc · leave</button>
+    </div>
+  </div>
+  <div class="game-body">
+    <div class="game-confetti" id="wordle-confetti"></div>
+    <div class="game-toast" id="wordle-toast"></div>
+    <div class="game-inner wordle">
+      <div class="wordle-board" id="wordle-board"></div>
+      <div class="wordle-keyboard" id="wordle-kbd"></div>
+    </div>
+  </div>
+</div>
+
+<div class="game-stage" id="game-sudoku">
+  <div class="game-bar">
+    <div class="gb-l">
+      <span class="game-title">sudoku</span>
+      <span class="game-sub">level <b id="sk-level">easy</b> · time <b id="sk-time">00:00</b> · mistakes <b id="sk-mistakes">0</b></span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="game-exit" id="sk-new">↻ new puzzle</button>
+      <button class="game-exit" id="sk-exit">esc · leave</button>
+    </div>
+  </div>
+  <div class="game-body">
+    <div class="game-confetti" id="sk-confetti"></div>
+    <div class="game-toast" id="sk-toast"></div>
+    <div class="game-inner sudoku">
+      <div class="sudoku-board" id="sk-board"></div>
+      <div class="sk-side">
+        <div class="sk-stat">filled <b id="sk-filled">0</b>/81</div>
+        <div class="sk-numpad" id="sk-numpad"></div>
+        <div class="sk-actions">
+          <button class="sk-btn" id="sk-pencil" title="pencil mode (P)">✎ pencil</button>
+          <button class="sk-btn" id="sk-erase" title="erase cell (Backspace)">⌫ erase</button>
+        </div>
+        <div class="sk-actions">
+          <button class="sk-btn" data-level="easy">easy</button>
+          <button class="sk-btn" data-level="medium">medium</button>
+          <button class="sk-btn" data-level="hard">hard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="game-stage" id="game-2048">
+  <div class="game-bar">
+    <div class="gb-l">
+      <span class="game-title">2048</span>
+      <span class="game-sub">slide · merge · ascend</span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="game-exit" id="g2-new">↻ new game</button>
+      <button class="game-exit" id="g2-exit">esc · leave</button>
+    </div>
+  </div>
+  <div class="game-body">
+    <div class="game-confetti" id="g2-confetti"></div>
+    <div class="game-toast" id="g2-toast"></div>
+    <div class="game-inner g2048">
+      <div class="g2048-top">
+        <div class="g2048-tip">
+          <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> or <kbd>WASD</kbd> · swipe · <kbd>R</kbd> reset
+        </div>
+        <div class="g2048-scores">
+          <div class="g2048-score">score<b id="g2-score">0</b></div>
+          <div class="g2048-score">best<b id="g2-best">0</b></div>
+        </div>
+      </div>
+      <div class="g2048-board" id="g2-board"></div>
+    </div>
+  </div>
+</div>
+
+<div class="game-stage" id="game-memory">
+  <div class="game-bar">
+    <div class="gb-l">
+      <span class="game-title">memory match</span>
+      <span class="game-sub">find all <b>8 pairs</b></span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="game-exit" id="mem-new">↻ shuffle</button>
+      <button class="game-exit" id="mem-exit">esc · leave</button>
+    </div>
+  </div>
+  <div class="game-body">
+    <div class="game-confetti" id="mem-confetti"></div>
+    <div class="game-toast" id="mem-toast"></div>
+    <div class="game-inner memory">
+      <div class="mem-stats">
+        <span>moves <b id="mem-moves">0</b></span>
+        <span>matched <b id="mem-matched">0</b>/8</span>
+        <span>time <b id="mem-time">00:00</b></span>
+      </div>
+      <div class="mem-board" id="mem-board"></div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/data/csg-cs2-data.js"></script>
+<!-- ─────────────── CS_GUESS GAME-STAGE ─────────────── -->
+<div class="game-stage" id="game-csguess">
+  <div class="game-bar">
+    <div class="gb-l">
+      <span class="game-title">cs_guess</span>
+      <span class="game-sub">round <b id="csg-round">001</b> · pool <b id="csg-pool">—</b></span>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap: wrap;">
+      <button class="game-exit" id="csg-how">// how to</button>
+      <button class="game-exit" id="csg-stats">// stats</button>
+      <button class="game-exit" id="csg-new">↻ new round</button>
+      <button class="game-exit" id="csg-exit">esc · leave</button>
+    </div>
+  </div>
+  <div class="game-body" style="padding:0;">
+    <div class="game-confetti" id="csg-confetti"></div>
+    <div class="game-toast" id="csg-toast"></div>
+    <div class="csg-stage">
+      <div class="csg-grid">
+        <!-- LEFT COLUMN -->
+        <div>
+          <section class="csg-panel">
+            <div class="csg-panel-header">
+              <div class="csg-label"><span class="csg-dot"></span>TARGET // CLASSIFIED</div>
+              <div class="csg-meta" id="csg-roundMeta">ROUND 001</div>
+            </div>
+            <div class="csg-target">
+              <div class="csg-target-frame" id="csg-targetFrame">
+                <div class="csg-target-status"><span class="csg-pulse"></span><span id="csg-statusText">SCANNING</span></div>
+                <div class="csg-corners"><span></span><span></span><span></span><span></span></div>
+                <img class="csg-target-img" id="csg-targetImg" src="" alt="" referrerpolicy="no-referrer" />
+                <div class="csg-target-overlay" id="csg-targetOverlay"></div>
+                <div class="csg-scanline" id="csg-scanlineEl"></div>
+              </div>
+              <div class="csg-attempts">
+                <div class="csg-dots-row" id="csg-attemptDots"></div>
+                <div class="csg-counter">ATTEMPTS <b id="csg-attemptCount">0</b> / 6</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="csg-panel">
+            <div class="csg-panel-header">
+              <div class="csg-label"><span class="csg-dot"></span>IDENTIFICATION INPUT</div>
+              <div class="csg-meta" id="csg-poolMeta">POOL // —</div>
+            </div>
+            <div class="csg-search">
+              <div class="csg-search-wrap">
+                <span class="csg-search-icon">▶</span>
+                <input
+                  type="text"
+                  class="csg-search-input"
+                  id="csg-searchInput"
+                  placeholder="Type item name to identify target..."
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
+              <div class="csg-search-hint">
+                <span>Min 2 characters · Click result to submit</span>
+                <span>↑↓ navigate · ↵ select · esc cancel</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="csg-panel">
+            <div class="csg-panel-header">
+              <div class="csg-label"><span class="csg-dot"></span>GUESS LOG</div>
+              <div class="csg-meta" id="csg-historyMeta">0 ENTRIES</div>
+            </div>
+            <div class="csg-history" id="csg-historyList">
+              <div class="csg-history-empty">// No guesses logged yet //</div>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <aside>
+          <section class="csg-panel">
+            <div class="csg-panel-header">
+              <div class="csg-label"><span class="csg-dot"></span>INTEL FEED</div>
+              <div class="csg-meta">UNLOCKED ON GUESS</div>
+            </div>
+            <div class="csg-hints" id="csg-hintList">
+              <div class="csg-hint-card locked"><div class="csg-num">01</div><div class="csg-hint-body"><span class="csg-k">Category</span><span class="csg-v locked">— locked —</span></div></div>
+              <div class="csg-hint-card locked"><div class="csg-num">02</div><div class="csg-hint-body"><span class="csg-k">Class / Type</span><span class="csg-v locked">— locked —</span></div></div>
+              <div class="csg-hint-card locked"><div class="csg-num">03</div><div class="csg-hint-body"><span class="csg-k">Rarity</span><span class="csg-v locked">— locked —</span></div></div>
+              <div class="csg-hint-card locked"><div class="csg-num">04</div><div class="csg-hint-body"><span class="csg-k">Origin</span><span class="csg-v locked">— locked —</span></div></div>
+              <div class="csg-hint-card locked"><div class="csg-num">05</div><div class="csg-hint-body"><span class="csg-k">Name Pattern</span><span class="csg-v locked">— locked —</span></div></div>
+              <div class="csg-hint-card locked"><div class="csg-num">06</div><div class="csg-hint-body"><span class="csg-k">Final Tip</span><span class="csg-v locked">— locked —</span></div></div>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+      <!-- loading screen overlay (within stage) -->
+      <div class="csg-loading" id="csg-loading">
+        <div class="csg-loading-inner">
+          <div class="csg-loading-title">CS_GUESS</div>
+          <div class="csg-loading-sub">BOOTING EMBEDDED REGISTRY</div>
+          <div class="csg-loading-bar"></div>
+          <div class="csg-loading-msg" id="csg-loadingMsg">Decompressing embedded registry…</div>
+          <button class="csg-loading-retry" id="csg-loadingRetry">Retry</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CS_GUESS dropdown lives at body level so it isn't clipped -->
+<div class="csg-dropdown" id="csg-dropdown"></div>
+
+<!-- CS_GUESS RESULT MODAL -->
+<div class="csg-modal-overlay" id="csg-resultModal">
+  <div class="csg-modal">
+    <div class="csg-modal-head">
+      <h2 id="csg-resultTitle">// MISSION COMPLETE</h2>
+      <button class="csg-modal-close" data-csg-close="csg-resultModal">✕</button>
+    </div>
+    <div class="csg-modal-body">
+      <div class="csg-result-image" id="csg-resultImageBox">
+        <img id="csg-resultImage" src="" alt="" referrerpolicy="no-referrer" />
+      </div>
+      <div class="csg-result-name" id="csg-resultName">—</div>
+      <div class="csg-result-cat" id="csg-resultCat">—</div>
+      <div class="csg-result-desc" id="csg-resultDesc"></div>
+      <div class="csg-result-meta">
+        <div class="csg-cell"><div class="csg-k">Attempts</div><div class="csg-v" id="csg-resultAttempts">—</div></div>
+        <div class="csg-cell"><div class="csg-k">Time</div><div class="csg-v" id="csg-resultTime">—</div></div>
+      </div>
+      <div class="csg-emoji-grid">
+        <div class="csg-eg-title">SHARE GRID</div>
+        <div class="csg-eg-row" id="csg-emojiRow">⬛⬛⬛⬛⬛⬛</div>
+      </div>
+      <div class="csg-modal-actions">
+        <button class="csg-mbtn" id="csg-shareBtn">📋 COPY</button>
+        <button class="csg-mbtn primary" id="csg-playAgainBtn">↻ NEW ROUND</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CS_GUESS STATS MODAL -->
+<div class="csg-modal-overlay" id="csg-statsModal">
+  <div class="csg-modal">
+    <div class="csg-modal-head">
+      <h2>// OPERATOR STATISTICS</h2>
+      <button class="csg-modal-close" data-csg-close="csg-statsModal">✕</button>
+    </div>
+    <div class="csg-modal-body">
+      <div class="csg-stat-row" id="csg-statRow"></div>
+      <h3 style="font-family: var(--font-mono); letter-spacing: 0.18em; color: var(--csg-ink-dim, #8b94a3); font-size: 12px; margin-bottom: 10px; text-transform: uppercase;">ATTEMPT DISTRIBUTION</h3>
+      <div id="csg-distList"></div>
+      <div class="csg-modal-actions" style="margin-top: 18px;">
+        <button class="csg-mbtn" id="csg-resetStatsBtn">⟲ RESET STATS</button>
+        <button class="csg-mbtn primary" data-csg-close="csg-statsModal">CLOSE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CS_GUESS HOW-TO-PLAY MODAL -->
+<div class="csg-modal-overlay" id="csg-howModal">
+  <div class="csg-modal">
+    <div class="csg-modal-head">
+      <h2>// MISSION BRIEFING</h2>
+      <button class="csg-modal-close" data-csg-close="csg-howModal">✕</button>
+    </div>
+    <div class="csg-modal-body csg-how">
+      <h3>OBJECTIVE</h3>
+      <p>Identify the classified Counter-Strike 2 item in <strong>6 attempts or fewer</strong>. The target can be any item from the CS2 universe — weapon skins, knives, gloves, stickers, agents, music kits, graffiti, collectibles, cases, keys, and more.</p>
+      <h3>PROGRESSIVE REVEAL</h3>
+      <p>Each attempt declassifies more visual data — the image becomes less obscured — and unlocks one additional intel hint about the target.</p>
+      <h3>FEEDBACK CODES</h3>
+      <div class="csg-legend">
+        <div class="csg-legend-row"><span class="csg-swatch green"></span><span><strong>GREEN</strong> — Correct identification.</span></div>
+        <div class="csg-legend-row"><span class="csg-swatch orange"></span><span><strong>ORANGE</strong> — Right weapon (skins) or right category (other items).</span></div>
+        <div class="csg-legend-row"><span class="csg-swatch yellow"></span><span><strong>YELLOW</strong> — Right finish/pattern, wrong weapon.</span></div>
+        <div class="csg-legend-row"><span class="csg-swatch red"></span><span><strong>RED</strong> — Wrong on all axes.</span></div>
+      </div>
+      <h3>INPUT</h3>
+      <p>Type any item's name in the identification input. Use the dropdown's thumbnails to verify before submitting.</p>
+      <div class="csg-modal-actions">
+        <button class="csg-mbtn primary" data-csg-close="csg-howModal">UNDERSTOOD</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────── SYNTH_LAB GAME-STAGE ─────────────── -->
+<div class="game-stage" id="game-synthlab">
+  <div class="game-bar">
+    <div class="gb-l">
+      <span class="game-title">synth_lab</span>
+      <span class="game-sub">voices <b id="sl-voices">0</b> · midi <b id="sl-midi-status">—</b> · <b id="sl-mode-label">poly</b></span>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap: wrap;">
+      <button class="game-exit" id="sl-help">// help</button>
+      <button class="game-exit" id="sl-panic">⚠ panic</button>
+      <button class="game-exit" id="sl-rec">⏺ rec</button>
+      <button class="game-exit" id="sl-exit">esc · leave</button>
+    </div>
+  </div>
+  <div class="game-body" style="padding:0;">
+    <div class="sl-stage" id="sl-stage"></div>
+  </div>
+</div>
+
+<!-- SYNTH_LAB HELP MODAL -->
+<div class="sl-modal-overlay" id="sl-help-modal">
+  <div class="sl-modal">
+    <h2>// SYNTH_LAB BRIEFING</h2>
+    <p>A polyphonic subtractive synthesiser built entirely from the Web Audio API. Three oscillators per voice, dual envelopes, dual LFOs, multi-mode filter, full FX chain, arpeggiator, 16-step sequencer, drum machine, MIDI input, and recording.</p>
+    <h3>Keyboard</h3>
+    <p>Bottom row <kbd>z</kbd>–<kbd>m</kbd>+<kbd>,</kbd>–<kbd>/</kbd> = lower octave · upper row <kbd>q</kbd>–<kbd>p</kbd> = upper octave · sharps on the row above.</p>
+    <p><kbd>←</kbd>/<kbd>→</kbd> = octave shift · <kbd>↑</kbd>/<kbd>↓</kbd> = mod wheel · <kbd>space</kbd> = sustain pedal.</p>
+    <h3>Mouse wheels</h3>
+    <p>The two strips left of the keyboard are pitch-bend (springs back) and mod-wheel (sticky). Drag vertically.</p>
+    <h3>Sequencer / Arp / Drum</h3>
+    <p>Click the LED on each card header to enable. Right-click a sequencer step to set its MIDI note. The arpeggiator plays whatever notes you're holding.</p>
+    <h3>MIDI</h3>
+    <p>Click <em>connect midi</em> in the preset card. Pitch-bend and mod-wheel CCs are mapped automatically.</p>
+    <h3>Recording</h3>
+    <p>Hit <kbd>⏺ rec</kbd> in the top bar — output is captured as <code>.webm</code> and downloaded when you stop.</p>
+    <div class="sl-modal-actions">
+      <button class="sl-btn" data-sl-close="sl-help-modal">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<!-- matrix rain overlay (konami) -->
+<div class="matrix-rain" id="matrix-rain"><canvas id="matrix-rain-cv"></canvas></div>
+
+<!-- voice command pill -->
+<div class="voice-pill" id="voice-pill">
+  <span class="pulse"></span>
+  <span class="label">listening…</span>
+  <button id="voice-stop">stop</button>
+</div>
+
+<!-- ─────────────── CUSTOMIZE FAB ─────────────── -->
+<button class="fab" id="fab" aria-label="customize">
+  <span class="gear">⚙</span> customize
+</button>
+
+<!-- ─────────────── CUSTOMIZE PANEL ─────────────── -->
+<aside class="config" id="config" aria-hidden="true">
+  <header class="mono">
+    <div>
+      <span class="title">playground</span>
+      <span class="title-sub">— tweak everything</span>
+    </div>
+    <button class="close-btn" id="cfg-close">×</button>
+  </header>
+
+  <div class="config-body">
+
+    <div class="cfg-group">
+      <div class="cfg-label">accent <span class="current" id="cur-accent">amber</span></div>
+      <div class="swatches" id="swatches">
+        <button class="swatch" data-accent="amber"  style="--c: #ffae5c"></button>
+        <button class="swatch" data-accent="matrix" style="--c: #8fd47f"></button>
+        <button class="swatch" data-accent="cyber"  style="--c: #66d9ef"></button>
+        <button class="swatch" data-accent="pink"   style="--c: #ff6ec7"></button>
+        <button class="swatch" data-accent="nord"   style="--c: #88c0d0"></button>
+        <button class="swatch" data-accent="red"    style="--c: #ff6e6e"></button>
+        <button class="swatch" data-accent="violet" style="--c: #b794f4"></button>
+        <button class="swatch custom" title="pick custom color">
+          <input type="color" id="custom-color" value="#ffae5c" />
+        </button>
+      </div>
+    </div>
+
+    <div class="cfg-group">
+      <div class="cfg-label">font <span class="current" id="cur-font">mono</span></div>
+      <div class="pill-group" data-group="font">
+        <button class="pill" data-font="mono">mono</button>
+        <button class="pill" data-font="sans">sans</button>
+        <button class="pill" data-font="serif">serif</button>
+        <button class="pill" data-font="pixel">pixel</button>
+      </div>
+    </div>
+
+    <div class="cfg-group">
+      <div class="cfg-label">background <span class="current" id="cur-bg">grid</span></div>
+      <div class="pill-group" data-group="bg">
+        <button class="pill" data-bg="grid">grid</button>
+        <button class="pill" data-bg="dots">dots</button>
+        <button class="pill" data-bg="lines">lines</button>
+        <button class="pill" data-bg="diag">diagonal</button>
+        <button class="pill" data-bg="none">off</button>
+      </div>
+    </div>
+
+    <div class="cfg-group">
+      <div class="cfg-label">density <span class="current" id="cur-density">normal</span></div>
+      <div class="pill-group" data-group="density">
+        <button class="pill" data-density="compact">compact</button>
+        <button class="pill" data-density="normal">normal</button>
+        <button class="pill" data-density="spacious">spacious</button>
+      </div>
+    </div>
+
+    <div class="cfg-group">
+      <div class="cfg-label">mode</div>
+      <div class="pill-group" data-group="mode">
+        <button class="pill" data-mode="dark">dark</button>
+        <button class="pill" data-mode="light">light</button>
+        <button class="pill" data-mode="matrix">matrix rain</button>
+      </div>
+    </div>
+
+    <div class="cfg-group">
+      <div class="cfg-label">effects</div>
+
+      <div class="cfg-toggle" data-toggle="cursor">
+        <div>
+          <div class="name">custom cursor</div>
+          <div class="desc">phosphor dot + lagging ring</div>
+        </div>
+        <div class="toggle on"></div>
+      </div>
+
+      <div class="cfg-toggle" data-toggle="scanlines">
+        <div>
+          <div class="name">scanlines</div>
+          <div class="desc">crt-style horizontal lines</div>
+        </div>
+        <div class="toggle on"></div>
+      </div>
+
+      <div class="cfg-toggle" data-toggle="vignette">
+        <div>
+          <div class="name">vignette</div>
+          <div class="desc">soft edge darkening</div>
+        </div>
+        <div class="toggle on"></div>
+      </div>
+
+      <div class="cfg-toggle" data-toggle="glitch">
+        <div>
+          <div class="name">glitch on hover</div>
+          <div class="desc">headline jitter when hovered</div>
+        </div>
+        <div class="toggle on"></div>
+      </div>
+    </div>
+
+    <div class="cfg-group">
+      <div class="cfg-label">layout</div>
+      <div class="cfg-tip" style="margin-bottom: 12px;">
+        toggle reorder mode, then drag sections around.
+        your custom order is saved automatically.
+      </div>
+      <div class="cfg-actions">
+        <button class="btn" id="btn-reorder">↕ reorder sections</button>
+      </div>
+    </div>
+
+    <div class="cfg-group">
+      <div class="cfg-label">chaos</div>
+      <div class="cfg-toggle" id="physics-toggle">
+        <div>
+          <div class="name">physics mode</div>
+          <div class="desc">everything falls. drag &amp; throw.</div>
+        </div>
+        <div class="toggle"></div>
+      </div>
+      <div class="cfg-actions" style="margin-top: 12px;">
+        <button class="btn" id="btn-shake">shake everything</button>
+      </div>
+      <div class="cfg-tip" style="margin-top: 12px;">
+        click and drag any element to fling it. terminal still works mid-chaos —
+        type <span style="color:var(--accent)">physics off</span> to put the page back together.
+      </div>
+    </div>
+
+    <div class="cfg-group">
+      <div class="cfg-label">world</div>
+      <div class="cfg-actions">
+        <button class="btn primary" id="btn-3d" style="flex: 1;">enter 3d mode →</button>
+      </div>
+      <div class="cfg-tip" style="margin-top: 12px;">
+        a randomized voxel playground. <span style="color:var(--accent)">first-person</span> ·
+        <kbd>WASD</kbd> walk · <kbd>SPACE</kbd> jump · <kbd>LMB</kbd> mine · <kbd>RMB</kbd> place.
+        find every amber block to claim a reward. ESC exits.
+      </div>
+    </div>
+
+    <div class="cfg-group">
+      <div class="cfg-label">desktop</div>
+      <div class="cfg-actions">
+        <button class="btn primary" id="btn-pc" style="flex: 1;">open desktop →</button>
+      </div>
+      <div class="cfg-tip" style="margin-top: 12px;">
+        a tiny in-browser OS. drag windows, browse the fake filesystem,
+        do math in the calculator, or open a terminal-in-a-terminal.
+        ESC exits.
+      </div>
+    </div>
+
+    <div class="cfg-group">
+      <div class="cfg-label">controls</div>
+      <div class="cfg-tip" style="margin-bottom: 12px;">
+        prefer the keyboard? everything here is also a terminal command.
+        try <span style="color:var(--accent)">theme cyber</span>,
+        <span style="color:var(--accent)">font pixel</span>, or
+        <span style="color:var(--accent)">help</span>.
+      </div>
+      <div class="cfg-actions">
+        <button class="btn" id="btn-export">copy as cmds</button>
+        <button class="btn" id="btn-reset">reset all</button>
+      </div>
+    </div>
+
+  </div>
+</aside>
+
+<script src="assets/js/app.js"></script>
+</body>
+</html>
