@@ -1703,7 +1703,7 @@ const FS = {
   '/var/log': { type: 'dir', children: ['boot.log'] },
 
   '/README.txt': { type: 'file', body:
-    "MECKE OS v1.0\n" +
+    "MECKE OS v1.1\n" +
     "─────────────\n\n" +
     "this is a sandbox desktop running entirely in your browser.\n" +
     "double-click any folder to open it. double-click a text file\n" +
@@ -1878,6 +1878,7 @@ function pcCreateWindow({ title, width = 460, height = 320, x, y, content, app, 
     '<div class="pc-titlebar">' +
       '<span class="title"></span>' +
       '<button class="tb-btn min" title="minimize">_</button>' +
+      '<button class="tb-btn max" title="maximize">▢</button>' +
       '<button class="tb-btn close" title="close">x</button>' +
     '</div>' +
     '<div class="pc-content"></div>' +
@@ -1897,6 +1898,10 @@ function pcCreateWindow({ title, width = 460, height = 320, x, y, content, app, 
     if (e.target.closest('.tb-btn')) return;
     pcStartDrag(e, el);
   });
+  el.querySelector('.pc-titlebar').addEventListener('dblclick', (e) => {
+    if (e.target.closest('.tb-btn')) return;
+    pcToggleMaximize(id);
+  });
   el.querySelector('.pc-resize').addEventListener('mousedown', (e) => pcStartResize(e, el));
   el.querySelector('.tb-btn.close').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -1908,9 +1913,46 @@ function pcCreateWindow({ title, width = 460, height = 320, x, y, content, app, 
     el.classList.add('minimized');
     pcRenderTaskbar();
   });
+  el.querySelector('.tb-btn.max').addEventListener('click', (e) => {
+    e.stopPropagation();
+    pcToggleMaximize(id);
+  });
+  // window-level context menu
+  el.addEventListener('contextmenu', (e) => {
+    if (e.target.closest('.pc-content')) return; // let inner apps have their own
+    e.preventDefault();
+    pcShowCtxMenu(e.clientX, e.clientY, pcWindowCtxItems(id));
+  });
 
   pcFocusWindow(id);
   return { id, el, contentEl, win };
+}
+
+function pcToggleMaximize(id) {
+  const w = pcWindows.get(id);
+  if (!w) return;
+  const el = w.el;
+  if (el.classList.contains('maximized')) {
+    el.classList.remove('maximized');
+    if (w._restore) {
+      el.style.left = w._restore.left;
+      el.style.top = w._restore.top;
+      el.style.width = w._restore.width;
+      el.style.height = w._restore.height;
+    }
+  } else {
+    w._restore = {
+      left: el.style.left, top: el.style.top,
+      width: el.style.width, height: el.style.height
+    };
+    el.classList.add('maximized');
+    const stage = document.getElementById('pc-stage').getBoundingClientRect();
+    el.style.left = '0px';
+    el.style.top = '0px';
+    el.style.width = stage.width + 'px';
+    el.style.height = (stage.height - 38) + 'px';
+  }
+  pcFocusWindow(id);
 }
 
 function pcStartDrag(e, el) {
@@ -2300,6 +2342,7 @@ function buildAboutApp() {
 
 /* ── App launcher / clock ────────────────────────── */
 function pcLaunchApp(app) {
+  pcRecordRecent(app);
   if (app === 'files') {
     pcCreateWindow({ title: 'Files — /home/mecke', width: 520, height: 380, content: buildFilesApp('/home/mecke'), app });
   } else if (app === 'calc') {
@@ -2318,6 +2361,13 @@ function pcLaunchApp(app) {
     pcCreateWindow({ title: 'Minesweeper', width: 280, height: 340, content: buildMinesApp(), app });
   } else if (app === 'terminal') {
     pcCreateWindow({ title: 'Terminal', width: 560, height: 360, content: buildTerminalApp(), app });
+  } else if (app === 'settings') {
+    pcCreateWindow({ title: 'Settings', width: 580, height: 420, content: buildSettingsApp(), app });
+  } else if (app === 'browser') {
+    pcCreateWindow({ title: 'mecke.browse', width: 600, height: 420, content: buildBrowserApp(), app });
+  } else if (app === 'clock') {
+    const c = buildClockApp();
+    pcCreateWindow({ title: 'Clock', width: 320, height: 280, content: c.el, app, onClose: c.cleanup });
   } else if (app === 'about') {
     pcCreateWindow({ title: 'About this OS', width: 380, height: 360, content: buildAboutApp(), app });
   }
@@ -2662,7 +2712,10 @@ function pcUpdateClock() {
   const el = document.getElementById('pc-tb-clock');
   if (!el) return;
   const d = new Date();
-  el.textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  const showSec = localStorage.getItem('mecke.os.seconds') === '1';
+  let txt = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  if (showSec) txt += ':' + String(d.getSeconds()).padStart(2,'0');
+  el.textContent = txt;
 }
 
 let pcBootShown = false;
@@ -2673,8 +2726,9 @@ const PC_BOOT_LINES = [
   { t: 240,  cls: 'ok',  text: '[  ok  ] mounting / on browser-fs' },
   { t: 320,  cls: 'ok',  text: '[  ok  ] starting window manager' },
   { t: 420,  cls: 'ok',  text: '[  ok  ] starting taskbar' },
-  { t: 520,  cls: 'ok',  text: '[  ok  ] loading apps: files calc notepad paint snake mines terminal about' },
-  { t: 640,  cls: 'ok',  text: '[  ok  ] populating fake filesystem (8 dirs, 10 files)' },
+  { t: 520,  cls: 'ok',  text: '[  ok  ] loading apps: files calc notepad paint synth snake mines terminal browser clock settings about' },
+  { t: 600,  cls: 'ok',  text: '[  ok  ] mounting wallpaper layer · 6 presets' },
+  { t: 660,  cls: 'ok',  text: '[  ok  ] start menu · context menu · quick settings ready' },
   { t: 760,  cls: 'ok',  text: '[  ok  ] hooking pointer + keyboard input' },
   { t: 880,  cls: 'acc', text: '[ MECKE ] welcome, mecke@os' },
   { t: 980,  cls: 'dim cursor-blink', text: '[ * ] desktop ready ' }
@@ -2719,6 +2773,7 @@ function enablePC() {
   pcUpdateClock();
   if (!pcClockTimer) pcClockTimer = setInterval(pcUpdateClock, 15000);
   pcRenderTaskbar();
+  pcInitShell();
   document.querySelectorAll('.config').forEach((c) => c.classList.remove('open'));
   if (!pcBootShown) {
     pcBootShown = true;
@@ -2731,6 +2786,12 @@ function disablePC() {
   pcOn = false;
   document.body.classList.remove('pc-on');
   if (pcClockTimer) { clearInterval(pcClockTimer); pcClockTimer = null; }
+  if (typeof pcUnlock === 'function') pcUnlock();
+  if (typeof pcCloseStartMenu === 'function') pcCloseStartMenu();
+  if (typeof pcCloseQuick === 'function') pcCloseQuick();
+  if (typeof pcHideCtxMenu === 'function') pcHideCtxMenu();
+  const stage = document.getElementById('pc-stage');
+  if (stage) stage.classList.remove('show-desktop');
 }
 
 /* desktop icon launching */
@@ -2749,6 +2810,13 @@ addEventListener('dblclick', (e) => {
 addEventListener('keydown', (e) => {
   if (!pcOn) return;
   if (e.key === 'Escape') {
+    // close popups first
+    const sm = document.getElementById('pc-startmenu');
+    const q  = document.getElementById('pc-quick');
+    const cx = document.getElementById('pc-ctx');
+    if (sm && sm.classList.contains('open')) { pcCloseStartMenu(); return; }
+    if (q  && q.classList.contains('open'))  { pcCloseQuick(); return; }
+    if (cx && cx.classList.contains('open')) { pcHideCtxMenu(); return; }
     if (pcWindows.size > 0) {
       // close focused window first
       let focused = null;
@@ -2758,12 +2826,818 @@ addEventListener('keydown', (e) => {
     disablePC();
     return;
   }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd' && !e.target.matches('input, textarea')) {
+    e.preventDefault(); pcToggleShowDesktop(); return;
+  }
   if (e.key === 'Enter') {
     if (e.target.matches('input, textarea')) return;
     const ic = document.querySelector('.pc-icon.active');
     if (ic) { e.preventDefault(); pcLaunchApp(ic.dataset.app); }
   }
 });
+
+/* ════════════════════════════════════════════════════════════
+   MECKE OS — desktop shell (wallpaper, start menu, quick
+   settings, context menu, lock screen, drag-select, settings)
+   ──────────────────────────────────────────────────────────── */
+
+const PC_APPS = [
+  { id: 'files',    name: 'Files',       glyph: 'F'  },
+  { id: 'calc',     name: 'Calculator',  glyph: '='  },
+  { id: 'notepad',  name: 'Notepad',     glyph: 'A'  },
+  { id: 'paint',    name: 'Paint',       glyph: '/\\'},
+  { id: 'synth',    name: 'Synth Pad',   glyph: '♪♪' },
+  { id: 'snake',    name: 'Snake',       glyph: '~~' },
+  { id: 'mines',    name: 'Minesweeper', glyph: '*'  },
+  { id: 'terminal', name: 'Terminal',    glyph: '$_' },
+  { id: 'browser',  name: 'Browser',     glyph: '@'  },
+  { id: 'clock',    name: 'Clock',       glyph: '⌚' },
+  { id: 'settings', name: 'Settings',    glyph: '⚙'  },
+  { id: 'about',    name: 'About',       glyph: '?'  },
+];
+
+const PC_WALLPAPERS = [
+  { id: 'aurora',    name: 'aurora'   },
+  { id: 'synthwave', name: 'synthwave'},
+  { id: 'matrix',    name: 'matrix'   },
+  { id: 'mountains', name: 'mountains'},
+  { id: 'grid',      name: 'grid'     },
+  { id: 'solid',     name: 'charcoal' },
+];
+
+const PC_ACCENTS = [
+  { id: 'amber',  c: '#ffae5c' },
+  { id: 'matrix', c: '#8fd47f' },
+  { id: 'cyber',  c: '#66d9ef' },
+  { id: 'pink',   c: '#ff6ec7' },
+  { id: 'nord',   c: '#88c0d0' },
+  { id: 'red',    c: '#ff6e6e' },
+  { id: 'violet', c: '#b794f4' },
+];
+
+const PC_LS = {
+  wallpaper: 'mecke.os.wallpaper',
+  recents:   'mecke.os.recents',
+  brightness:'mecke.os.brightness',
+  dnd:       'mecke.os.dnd',
+};
+
+let pcShellInited = false;
+let pcSelectActive = false;
+
+function pcInitShell() {
+  pcApplyWallpaper(localStorage.getItem(PC_LS.wallpaper) || 'aurora');
+  pcApplyBrightness(parseInt(localStorage.getItem(PC_LS.brightness) || '100', 10));
+  pcRenderStartMenuGrid();
+  pcRenderRecents();
+  pcUpdateQuickFooter();
+
+  if (pcShellInited) return;
+  pcShellInited = true;
+
+  const startBtn = document.getElementById('pc-tb-start');
+  if (startBtn) startBtn.addEventListener('click', (e) => { e.stopPropagation(); pcToggleStartMenu(); });
+
+  const showDeskBtn = document.getElementById('pc-tb-show-desktop');
+  if (showDeskBtn) showDeskBtn.addEventListener('click', pcToggleShowDesktop);
+
+  const clockBtn = document.getElementById('pc-tb-clock');
+  if (clockBtn) clockBtn.addEventListener('click', (e) => { e.stopPropagation(); pcToggleQuick(); });
+
+  document.querySelectorAll('.pc-tb-tray-btn').forEach((b) => {
+    b.addEventListener('click', (e) => { e.stopPropagation(); pcToggleQuick(); });
+  });
+
+  // start menu interactions
+  const sm = document.getElementById('pc-startmenu');
+  if (sm) {
+    sm.addEventListener('click', (e) => e.stopPropagation());
+    sm.querySelectorAll('[data-sm-action]').forEach((b) => {
+      b.addEventListener('click', () => pcStartMenuAction(b.dataset.smAction));
+    });
+    const search = document.getElementById('pc-sm-search');
+    if (search) {
+      search.addEventListener('input', () => pcRenderStartMenuGrid(search.value));
+      search.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const first = sm.querySelector('.pc-sm-item');
+          if (first) {
+            first.click();
+          }
+        } else if (e.key === 'Escape') {
+          pcCloseStartMenu();
+        }
+      });
+    }
+  }
+
+  // quick settings
+  const quick = document.getElementById('pc-quick');
+  if (quick) {
+    quick.addEventListener('click', (e) => e.stopPropagation());
+    quick.querySelectorAll('[data-quick]').forEach((b) => {
+      b.addEventListener('click', () => pcQuickToggle(b.dataset.quick));
+    });
+    quick.querySelectorAll('[data-quick-link]').forEach((b) => {
+      b.addEventListener('click', () => { pcCloseQuick(); pcLaunchApp('settings'); });
+    });
+    const vol = document.getElementById('pc-quick-vol');
+    const volv = document.getElementById('pc-quick-vol-val');
+    if (vol && volv) vol.addEventListener('input', () => { volv.textContent = vol.value; });
+    const bri = document.getElementById('pc-quick-bri');
+    const briv = document.getElementById('pc-quick-bri-val');
+    if (bri && briv) bri.addEventListener('input', () => {
+      briv.textContent = bri.value;
+      pcApplyBrightness(parseInt(bri.value, 10));
+      localStorage.setItem(PC_LS.brightness, bri.value);
+    });
+  }
+
+  // global click to close popups
+  document.addEventListener('click', (ev) => {
+    if (!pcOn) return;
+    pcCloseStartMenu();
+    pcCloseQuick();
+    pcHideCtxMenu();
+  });
+
+  // desktop right-click
+  const desktop = document.getElementById('pc-desktop');
+  if (desktop) {
+    desktop.addEventListener('contextmenu', (e) => {
+      const onWin = e.target.closest('.pc-window');
+      if (onWin) return; // window has its own handler
+      const onIcon = e.target.closest('.pc-icon');
+      e.preventDefault();
+      if (onIcon) {
+        pcShowCtxMenu(e.clientX, e.clientY, pcIconCtxItems(onIcon.dataset.app));
+      } else {
+        pcShowCtxMenu(e.clientX, e.clientY, pcDesktopCtxItems());
+      }
+    });
+    desktop.addEventListener('mousedown', pcMaybeStartSelect);
+  }
+
+  // lock screen tap-to-unlock
+  const lock = document.getElementById('pc-lock');
+  if (lock) {
+    const unlock = () => pcUnlock();
+    lock.addEventListener('click', unlock);
+    addEventListener('keydown', (e) => {
+      if (lock.classList.contains('open')) { e.preventDefault(); unlock(); }
+    });
+  }
+
+  // close popups on Escape (but only if open) — handled by main escape too
+}
+
+/* ── wallpaper ───────────────────────────────────── */
+function pcApplyWallpaper(id) {
+  const wp = document.getElementById('pc-wallpaper');
+  if (!wp) return;
+  if (!PC_WALLPAPERS.find((w) => w.id === id)) id = 'aurora';
+  wp.dataset.wallpaper = id;
+  localStorage.setItem(PC_LS.wallpaper, id);
+}
+
+function pcApplyBrightness(v) {
+  const stage = document.getElementById('pc-stage');
+  if (!stage) return;
+  stage.classList.remove('brightness-low', 'brightness-mid');
+  if (v <= 60) stage.classList.add('brightness-low');
+  else if (v <= 85) stage.classList.add('brightness-mid');
+}
+
+/* ── recents ─────────────────────────────────────── */
+function pcRecordRecent(app) {
+  if (!app) return;
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(PC_LS.recents) || '[]'); } catch (_) {}
+  list = [app, ...list.filter((x) => x !== app)].slice(0, 6);
+  localStorage.setItem(PC_LS.recents, JSON.stringify(list));
+  pcRenderRecents();
+}
+
+function pcRenderRecents() {
+  const el = document.getElementById('pc-sm-recent');
+  if (!el) return;
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(PC_LS.recents) || '[]'); } catch (_) {}
+  if (!list.length) {
+    el.innerHTML = '<div class="pc-sm-recent-empty">// no recent apps yet</div>';
+    return;
+  }
+  el.innerHTML = '';
+  list.forEach((appId) => {
+    const meta = PC_APPS.find((a) => a.id === appId);
+    if (!meta) return;
+    const row = document.createElement('div');
+    row.className = 'pc-sm-recent-row';
+    row.innerHTML = '<span class="ic">' + meta.glyph + '</span><span>' + meta.name + '</span>';
+    row.addEventListener('click', () => { pcCloseStartMenu(); pcLaunchApp(meta.id); });
+    el.appendChild(row);
+  });
+}
+
+/* ── start menu ──────────────────────────────────── */
+function pcRenderStartMenuGrid(filter) {
+  const grid = document.getElementById('pc-sm-grid');
+  if (!grid) return;
+  const f = (filter || '').trim().toLowerCase();
+  grid.innerHTML = '';
+  PC_APPS
+    .filter((a) => !f || a.name.toLowerCase().includes(f) || a.id.includes(f))
+    .forEach((a) => {
+      const it = document.createElement('div');
+      it.className = 'pc-sm-item';
+      it.innerHTML = '<div class="glyph">' + a.glyph + '</div><div class="lbl">' + a.name + '</div>';
+      it.addEventListener('click', () => { pcCloseStartMenu(); pcLaunchApp(a.id); });
+      grid.appendChild(it);
+    });
+}
+
+function pcToggleStartMenu() {
+  const sm = document.getElementById('pc-startmenu');
+  const btn = document.getElementById('pc-tb-start');
+  if (!sm) return;
+  if (sm.classList.contains('open')) {
+    pcCloseStartMenu();
+  } else {
+    pcCloseQuick();
+    pcHideCtxMenu();
+    sm.classList.add('open');
+    if (btn) btn.classList.add('active');
+    const search = document.getElementById('pc-sm-search');
+    if (search) { search.value = ''; pcRenderStartMenuGrid(); setTimeout(() => search.focus(), 30); }
+  }
+}
+
+function pcCloseStartMenu() {
+  const sm = document.getElementById('pc-startmenu');
+  const btn = document.getElementById('pc-tb-start');
+  if (sm) sm.classList.remove('open');
+  if (btn) btn.classList.remove('active');
+}
+
+function pcStartMenuAction(act) {
+  pcCloseStartMenu();
+  if (act === 'settings') pcLaunchApp('settings');
+  else if (act === 'about') pcLaunchApp('about');
+  else if (act === 'lock') pcLock();
+  else if (act === 'exit') disablePC();
+}
+
+/* ── lock screen ─────────────────────────────────── */
+let pcLockTimer = null;
+function pcLock() {
+  const lock = document.getElementById('pc-lock');
+  if (!lock) return;
+  pcLockTick();
+  if (!pcLockTimer) pcLockTimer = setInterval(pcLockTick, 1000);
+  lock.classList.add('open');
+}
+function pcUnlock() {
+  const lock = document.getElementById('pc-lock');
+  if (!lock) return;
+  lock.classList.remove('open');
+  if (pcLockTimer) { clearInterval(pcLockTimer); pcLockTimer = null; }
+}
+function pcLockTick() {
+  const t = document.getElementById('pc-lock-time');
+  const d = document.getElementById('pc-lock-date');
+  const now = new Date();
+  if (t) t.textContent = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  if (d) d.textContent = now.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+}
+
+/* ── quick settings ──────────────────────────────── */
+const pcQuickState = { net: true, bt: false, dnd: false, theme: false };
+
+function pcToggleQuick() {
+  const q = document.getElementById('pc-quick');
+  if (!q) return;
+  if (q.classList.contains('open')) {
+    pcCloseQuick();
+  } else {
+    pcCloseStartMenu();
+    pcHideCtxMenu();
+    q.classList.add('open');
+    pcRenderQuickTiles();
+    pcUpdateQuickFooter();
+  }
+}
+function pcCloseQuick() {
+  const q = document.getElementById('pc-quick');
+  if (q) q.classList.remove('open');
+}
+function pcRenderQuickTiles() {
+  document.querySelectorAll('.pc-quick-tile').forEach((t) => {
+    const k = t.dataset.quick;
+    t.classList.toggle('on', !!pcQuickState[k]);
+  });
+}
+function pcQuickToggle(k) {
+  pcQuickState[k] = !pcQuickState[k];
+  if (k === 'theme') {
+    // cycle wallpaper as a fun shortcut
+    const cur = document.getElementById('pc-wallpaper').dataset.wallpaper;
+    const idx = PC_WALLPAPERS.findIndex((w) => w.id === cur);
+    const next = PC_WALLPAPERS[(idx + 1) % PC_WALLPAPERS.length];
+    pcApplyWallpaper(next.id);
+  }
+  if (k === 'dnd') {
+    localStorage.setItem(PC_LS.dnd, pcQuickState.dnd ? '1' : '0');
+  }
+  pcRenderQuickTiles();
+}
+function pcUpdateQuickFooter() {
+  const d = document.getElementById('pc-quick-date');
+  if (d) d.textContent = new Date().toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+  const bri = document.getElementById('pc-quick-bri');
+  const briv = document.getElementById('pc-quick-bri-val');
+  if (bri && briv) {
+    const v = parseInt(localStorage.getItem(PC_LS.brightness) || '100', 10);
+    bri.value = v; briv.textContent = v;
+  }
+}
+
+/* ── context menu ────────────────────────────────── */
+function pcShowCtxMenu(x, y, items) {
+  const m = document.getElementById('pc-ctx');
+  if (!m) return;
+  pcCloseStartMenu(); pcCloseQuick();
+  m.innerHTML = '';
+  items.forEach((it) => {
+    if (it.sep) {
+      const s = document.createElement('div');
+      s.className = 'pc-ctx-sep';
+      m.appendChild(s);
+      return;
+    }
+    if (it.label) {
+      const l = document.createElement('div');
+      l.className = 'pc-ctx-sub-label';
+      l.textContent = it.label;
+      m.appendChild(l);
+      return;
+    }
+    const row = document.createElement('div');
+    row.className = 'pc-ctx-item' + (it.danger ? ' danger' : '') + (it.disabled ? ' disabled' : '');
+    row.innerHTML =
+      '<span class="acc">' + (it.icon || '·') + '</span>' +
+      '<span class="lbl"></span>' +
+      (it.key ? '<span class="key">' + it.key + '</span>' : '');
+    row.querySelector('.lbl').textContent = it.text;
+    if (!it.disabled) row.addEventListener('click', () => {
+      pcHideCtxMenu();
+      try { it.run && it.run(); } catch (_) {}
+    });
+    m.appendChild(row);
+  });
+  m.classList.add('open');
+  // measure & clamp
+  const stage = document.getElementById('pc-stage').getBoundingClientRect();
+  m.style.left = '0px'; m.style.top = '0px';
+  const w = m.offsetWidth, h = m.offsetHeight;
+  let lx = x, ly = y;
+  if (lx + w > stage.width - 6) lx = stage.width - w - 6;
+  if (ly + h > stage.height - 42) ly = stage.height - h - 42;
+  m.style.left = Math.max(6, lx) + 'px';
+  m.style.top  = Math.max(6, ly) + 'px';
+}
+function pcHideCtxMenu() {
+  const m = document.getElementById('pc-ctx');
+  if (m) m.classList.remove('open');
+}
+
+function pcDesktopCtxItems() {
+  const cur = document.getElementById('pc-wallpaper').dataset.wallpaper;
+  const wpItems = PC_WALLPAPERS.map((w) => ({
+    icon: w.id === cur ? '●' : '○',
+    text: w.name,
+    run: () => pcApplyWallpaper(w.id)
+  }));
+  return [
+    { icon: '↻', text: 'Refresh',           run: () => pcFlashDesktop() },
+    { icon: '+', text: 'New folder',        run: () => pcNewFolder() },
+    { icon: '$', text: 'Open in Terminal',  key: '', run: () => pcLaunchApp('terminal') },
+    { sep: true },
+    { label: 'wallpaper' },
+    ...wpItems,
+    { sep: true },
+    { icon: '⚙', text: 'Settings',          run: () => pcLaunchApp('settings') },
+    { icon: '⏻', text: 'Lock screen',       run: () => pcLock() },
+    { icon: '⏏', text: 'Exit desktop',      danger: true, run: () => disablePC() },
+  ];
+}
+function pcIconCtxItems(appId) {
+  return [
+    { icon: '▶', text: 'Open',              run: () => pcLaunchApp(appId) },
+    { icon: '⚙', text: 'App settings…',     disabled: true },
+    { sep: true },
+    { icon: '↻', text: 'Refresh',           run: () => pcFlashDesktop() },
+  ];
+}
+function pcWindowCtxItems(id) {
+  const w = pcWindows.get(id);
+  const maxed = w && w.el.classList.contains('maximized');
+  return [
+    { icon: '_',  text: 'Minimize', run: () => { if (!w) return; w.minimized = true; w.el.classList.add('minimized'); pcRenderTaskbar(); } },
+    { icon: '▢',  text: maxed ? 'Restore' : 'Maximize', run: () => pcToggleMaximize(id) },
+    { sep: true },
+    { icon: 'x',  text: 'Close',    danger: true, run: () => pcCloseWindow(id) },
+  ];
+}
+
+function pcFlashDesktop() {
+  const desk = document.getElementById('pc-desktop');
+  if (!desk) return;
+  desk.style.transition = 'filter 0.16s';
+  desk.style.filter = 'brightness(1.4)';
+  setTimeout(() => { desk.style.filter = ''; }, 180);
+}
+
+let pcNewFolderSeq = 1;
+function pcNewFolder() {
+  const parent = '/home/mecke';
+  const node = fsGet(parent);
+  if (!node) return;
+  let name = 'New Folder';
+  while (node.children.includes(name)) { pcNewFolderSeq++; name = 'New Folder ' + pcNewFolderSeq; }
+  node.children.push(name);
+  FS[parent + '/' + name] = { type: 'dir', children: [] };
+  pcLaunchApp('files');
+}
+
+/* ── show desktop ────────────────────────────────── */
+function pcToggleShowDesktop() {
+  const stage = document.getElementById('pc-stage');
+  if (!stage) return;
+  stage.classList.toggle('show-desktop');
+}
+
+/* ── drag-select ─────────────────────────────────── */
+function pcMaybeStartSelect(e) {
+  if (e.button !== 0) return;
+  if (e.target.closest('.pc-icon, .pc-window')) return;
+  const desktop = document.getElementById('pc-desktop');
+  const box = document.getElementById('pc-select-box');
+  const rect = desktop.getBoundingClientRect();
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  document.querySelectorAll('.pc-icon.active').forEach((n) => n.classList.remove('active'));
+  pcCloseStartMenu(); pcCloseQuick(); pcHideCtxMenu();
+  const onMove = (ev) => {
+    const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+    const left = Math.min(sx, x), top = Math.min(sy, y);
+    const w = Math.abs(x - sx), h = Math.abs(y - sy);
+    if (!pcSelectActive && (w > 3 || h > 3)) {
+      pcSelectActive = true;
+      box.style.display = 'block';
+    }
+    if (pcSelectActive) {
+      box.style.left = left + 'px';
+      box.style.top  = top + 'px';
+      box.style.width = w + 'px';
+      box.style.height = h + 'px';
+      // hit-test icons
+      document.querySelectorAll('.pc-icon').forEach((ic) => {
+        const r = ic.getBoundingClientRect();
+        const ix = r.left - rect.left, iy = r.top - rect.top;
+        const overlap = !(ix + r.width < left || iy + r.height < top || ix > left + w || iy > top + h);
+        ic.classList.toggle('active', overlap);
+      });
+    }
+  };
+  const onUp = () => {
+    removeEventListener('mousemove', onMove);
+    removeEventListener('mouseup', onUp);
+    if (pcSelectActive) { pcSelectActive = false; box.style.display = 'none'; }
+  };
+  addEventListener('mousemove', onMove);
+  addEventListener('mouseup', onUp);
+}
+
+/* ── App: Settings ───────────────────────────────── */
+function buildSettingsApp() {
+  const wrap = document.createElement('div');
+  wrap.className = 'stg-wrap';
+  wrap.innerHTML =
+    '<div class="stg-side">' +
+      '<button data-stg="personal" class="active">personalize</button>' +
+      '<button data-stg="display">display</button>' +
+      '<button data-stg="sound">sound</button>' +
+      '<button data-stg="system">system</button>' +
+      '<button data-stg="about">about</button>' +
+    '</div>' +
+    '<div class="stg-main" id="stg-main"></div>';
+  const main = wrap.querySelector('#stg-main');
+
+  function paneWallpapers() {
+    const cur = document.getElementById('pc-wallpaper').dataset.wallpaper;
+    const tiles = PC_WALLPAPERS.map((w) =>
+      '<div class="stg-wp-tile' + (w.id === cur ? ' active' : '') + '" data-wp="' + w.id + '">' +
+        '<div class="pc-wallpaper" data-wallpaper="' + w.id + '" style="position:absolute;inset:0;"></div>' +
+        '<span class="name">' + w.name + '</span>' +
+      '</div>'
+    ).join('');
+    return '' +
+      '<h3 class="stg-h">Wallpaper</h3>' +
+      '<div class="stg-wp-grid">' + tiles + '</div>';
+  }
+
+  function paneAccent() {
+    const cur = (typeof state !== 'undefined' && state.accent) || 'amber';
+    const dots = PC_ACCENTS.map((a) =>
+      '<button class="stg-acc' + (a.id === cur ? ' active' : '') + '" data-acc="' + a.id + '" style="background:' + a.c + '" title="' + a.id + '"></button>'
+    ).join('');
+    return '' +
+      '<h3 class="stg-h" style="margin-top:18px;">Accent color</h3>' +
+      '<div class="stg-acc-grid">' + dots + '</div>';
+  }
+
+  function render(tab) {
+    main.innerHTML = '';
+    if (tab === 'personal') {
+      main.innerHTML = paneWallpapers() + paneAccent() +
+        '<h3 class="stg-h" style="margin-top:18px;">Taskbar</h3>' +
+        '<div class="stg-row">' +
+          '<div><div class="k">Show seconds in clock</div><div class="desc">updates the taskbar clock every second</div></div>' +
+          '<div class="ctl"><button class="stg-pill" data-toggle="seconds">off</button></div>' +
+        '</div>';
+      main.querySelectorAll('[data-wp]').forEach((t) => {
+        t.addEventListener('click', () => {
+          pcApplyWallpaper(t.dataset.wp);
+          main.querySelectorAll('.stg-wp-tile').forEach((x) => x.classList.toggle('active', x === t));
+        });
+      });
+      main.querySelectorAll('[data-acc]').forEach((b) => {
+        b.addEventListener('click', () => {
+          try {
+            if (typeof state !== 'undefined') {
+              state.accent = b.dataset.acc;
+              state.accentHex = null;
+              if (typeof applyAccent === 'function') applyAccent();
+              if (typeof saveState === 'function') saveState();
+            }
+          } catch (_) {}
+          main.querySelectorAll('.stg-acc').forEach((x) => x.classList.toggle('active', x === b));
+        });
+      });
+      const secBtn = main.querySelector('[data-toggle="seconds"]');
+      if (secBtn) {
+        const on = localStorage.getItem('mecke.os.seconds') === '1';
+        secBtn.classList.toggle('on', on); secBtn.textContent = on ? 'on' : 'off';
+        secBtn.addEventListener('click', () => {
+          const cur = localStorage.getItem('mecke.os.seconds') === '1';
+          const next = !cur;
+          localStorage.setItem('mecke.os.seconds', next ? '1' : '0');
+          secBtn.classList.toggle('on', next);
+          secBtn.textContent = next ? 'on' : 'off';
+          pcUpdateClock();
+          if (pcClockTimer) clearInterval(pcClockTimer);
+          pcClockTimer = setInterval(pcUpdateClock, next ? 1000 : 15000);
+        });
+      }
+    } else if (tab === 'display') {
+      main.innerHTML =
+        '<h3 class="stg-h">Display</h3>' +
+        '<div class="stg-row">' +
+          '<div><div class="k">Brightness</div><div class="desc">dims the wallpaper layer</div></div>' +
+          '<div class="ctl" style="flex:1;max-width:240px;"><input type="range" min="40" max="100" id="stg-bri" style="width:100%"/></div>' +
+        '</div>' +
+        '<div class="stg-row">' +
+          '<div><div class="k">Resolution</div><div class="desc">adapts to the browser window</div></div>' +
+          '<div class="ctl"><span id="stg-res" style="font-size:11px;color:var(--accent);font-family:var(--font-mono);">—</span></div>' +
+        '</div>';
+      const bri = main.querySelector('#stg-bri');
+      bri.value = localStorage.getItem(PC_LS.brightness) || '100';
+      bri.addEventListener('input', () => {
+        const v = parseInt(bri.value, 10);
+        pcApplyBrightness(v);
+        localStorage.setItem(PC_LS.brightness, String(v));
+        pcUpdateQuickFooter();
+      });
+      const r = document.getElementById('pc-stage').getBoundingClientRect();
+      main.querySelector('#stg-res').textContent = Math.round(r.width) + ' × ' + Math.round(r.height);
+    } else if (tab === 'sound') {
+      main.innerHTML =
+        '<h3 class="stg-h">Sound</h3>' +
+        '<div class="stg-row"><div><div class="k">Master volume</div><div class="desc">cosmetic — most apps use Web Audio directly</div></div>' +
+        '<div class="ctl" style="flex:1;max-width:240px;"><input type="range" id="stg-vol" min="0" max="100" value="60" style="width:100%"/></div></div>' +
+        '<div class="stg-row"><div><div class="k">Boot chime</div><div class="desc">play a quick tone on next desktop boot</div></div>' +
+        '<div class="ctl"><button class="stg-pill" data-toggle="chime">off</button></div></div>';
+      const chimeBtn = main.querySelector('[data-toggle="chime"]');
+      const on = localStorage.getItem('mecke.os.chime') === '1';
+      chimeBtn.classList.toggle('on', on); chimeBtn.textContent = on ? 'on' : 'off';
+      chimeBtn.addEventListener('click', () => {
+        const cur = localStorage.getItem('mecke.os.chime') === '1';
+        const next = !cur;
+        localStorage.setItem('mecke.os.chime', next ? '1' : '0');
+        chimeBtn.classList.toggle('on', next); chimeBtn.textContent = next ? 'on' : 'off';
+        if (next) pcPlayChime();
+      });
+    } else if (tab === 'system') {
+      const ru = (function () {
+        const s = Math.floor((Date.now() - pcStartTime) / 1000);
+        const m = Math.floor(s / 60), ss = s % 60;
+        return m + 'm ' + String(ss).padStart(2,'0') + 's';
+      }());
+      main.innerHTML =
+        '<h3 class="stg-h">System</h3>' +
+        '<div class="stg-row"><div class="k">OS</div><div class="ctl" style="color:var(--accent);font-family:var(--font-mono);">MECKE OS v1.1</div></div>' +
+        '<div class="stg-row"><div class="k">Renderer</div><div class="ctl" style="font-family:var(--font-mono);">DOM + CSS</div></div>' +
+        '<div class="stg-row"><div class="k">Uptime</div><div class="ctl" style="font-family:var(--font-mono);">' + ru + '</div></div>' +
+        '<div class="stg-row"><div class="k">Reset desktop preferences</div>' +
+        '<div class="ctl"><button class="stg-pill" id="stg-reset">reset</button></div></div>';
+      main.querySelector('#stg-reset').addEventListener('click', () => {
+        Object.values(PC_LS).forEach((k) => localStorage.removeItem(k));
+        localStorage.removeItem('mecke.os.seconds');
+        localStorage.removeItem('mecke.os.chime');
+        pcApplyWallpaper('aurora');
+        pcApplyBrightness(100);
+        pcRenderRecents();
+        const btn = main.querySelector('#stg-reset');
+        btn.textContent = 'reset ✓'; btn.classList.add('on');
+        setTimeout(() => { btn.textContent = 'reset'; btn.classList.remove('on'); }, 1200);
+      });
+    } else if (tab === 'about') {
+      main.innerHTML =
+        '<h3 class="stg-h">About this OS</h3>' +
+        '<p style="color:var(--ink-mute);font-size:12px;line-height:1.6;">' +
+        'MECKE OS is a browser-native desktop sandbox built into the static portfolio at mecke.dev. ' +
+        'No backend, no build step — every window, file, and pixel ships in the same HTML bundle.' +
+        '</p>' +
+        '<div class="stg-row"><div class="k">Author</div><div class="ctl"><a href="https://mecke.dev" target="_blank" style="color:var(--accent);">mecke.dev</a></div></div>' +
+        '<div class="stg-row"><div class="k">Contact</div><div class="ctl"><a href="mailto:contact@mecke.dev" style="color:var(--accent);">contact@mecke.dev</a></div></div>' +
+        '<div class="stg-row"><div class="k">Version</div><div class="ctl" style="font-family:var(--font-mono);color:var(--accent);">v1.1 · "desktop"</div></div>';
+    }
+  }
+
+  wrap.querySelectorAll('.stg-side button').forEach((b) => {
+    b.addEventListener('click', () => {
+      wrap.querySelectorAll('.stg-side button').forEach((x) => x.classList.toggle('active', x === b));
+      render(b.dataset.stg);
+    });
+  });
+  render('personal');
+  return wrap;
+}
+
+function pcPlayChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = ctx.currentTime;
+    [523.25, 659.25, 783.99].forEach((f, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t + i * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.18, t + i * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.08 + 0.45);
+      o.connect(g).connect(ctx.destination);
+      o.start(t + i * 0.08); o.stop(t + i * 0.08 + 0.5);
+    });
+    setTimeout(() => ctx.close(), 1500);
+  } catch (_) {}
+}
+
+/* ── App: Browser ────────────────────────────────── */
+function buildBrowserApp() {
+  const wrap = document.createElement('div');
+  wrap.className = 'br-wrap';
+  wrap.innerHTML =
+    '<div class="br-bar">' +
+      '<button class="br-btn" data-br="back">←</button>' +
+      '<button class="br-btn" data-br="fwd">→</button>' +
+      '<button class="br-btn" data-br="home">⌂</button>' +
+      '<input class="br-url" type="text" value="mecke://home"/>' +
+      '<button class="br-btn" data-br="go">↵</button>' +
+    '</div>' +
+    '<div class="br-view"></div>';
+  const url = wrap.querySelector('.br-url');
+  const view = wrap.querySelector('.br-view');
+  const stack = ['mecke://home'];
+  let idx = 0;
+
+  const pages = {
+    'mecke://home': () =>
+      '<h1>mecke://home</h1>' +
+      '<p>welcome to the offline browser. there is no real internet here — only a small set of pages baked into the OS.</p>' +
+      '<h2>links</h2>' +
+      '<ul>' +
+        '<li><a href="#" data-go="mecke://about">about</a></li>' +
+        '<li><a href="#" data-go="mecke://services">services</a></li>' +
+        '<li><a href="#" data-go="mecke://projects">projects</a></li>' +
+        '<li><a href="#" data-go="mecke://hidden">???</a></li>' +
+      '</ul>',
+    'mecke://about': () =>
+      '<h1>about</h1>' +
+      '<p>mecke is a self-taught technical generalist. this little OS sandbox ships in the same static html bundle as the rest of the portfolio. no node_modules, no build, no analytics.</p>' +
+      '<p>contact: <a href="mailto:contact@mecke.dev">contact@mecke.dev</a></p>',
+    'mecke://services': () =>
+      '<h1>services</h1>' +
+      '<ul>' +
+        '<li>websites · landing, portfolio, dashboards</li>' +
+        '<li>scripts · automation, scrapers, sync</li>' +
+        '<li>desktop apps · tauri / wpf</li>' +
+        '<li>real-time tools · overlays, parsers</li>' +
+        '<li>ai workflows · agents, pipelines</li>' +
+      '</ul>',
+    'mecke://projects': () =>
+      '<h1>projects</h1>' +
+      '<ul>' +
+        '<li>cs-translator — real-time CS chat translator</li>' +
+        '<li>vorsorge — tauri + svelte desktop app</li>' +
+        '<li>pin-platform — collection tracker</li>' +
+        '<li>easter-eggs — knowledge graph</li>' +
+      '</ul>',
+    'mecke://hidden': () =>
+      '<h1 style="color:var(--accent)">// classified //</h1>' +
+      '<p style="font-family:var(--font-mono);color:var(--ink-mute);">try the voxel world. find every amber block. you might unlock something.</p>',
+    '404': () =>
+      '<h1>404</h1><p>that route does not exist in this little browser.</p>',
+  };
+
+  function render(u) {
+    url.value = u;
+    const fn = pages[u] || pages['404'];
+    view.innerHTML = fn();
+    view.querySelectorAll('[data-go]').forEach((a) => {
+      a.addEventListener('click', (e) => { e.preventDefault(); go(a.dataset.go); });
+    });
+  }
+  function go(u) {
+    if (stack[idx] === u) return;
+    stack.length = idx + 1;
+    stack.push(u); idx = stack.length - 1;
+    render(u);
+  }
+
+  wrap.querySelectorAll('[data-br]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const k = b.dataset.br;
+      if (k === 'back' && idx > 0) { idx--; render(stack[idx]); }
+      else if (k === 'fwd' && idx < stack.length - 1) { idx++; render(stack[idx]); }
+      else if (k === 'home') go('mecke://home');
+      else if (k === 'go') go(url.value.trim());
+    });
+  });
+  url.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(url.value.trim()); });
+
+  render('mecke://home');
+  return wrap;
+}
+
+/* ── App: Clock ──────────────────────────────────── */
+function buildClockApp() {
+  const wrap = document.createElement('div');
+  wrap.className = 'clk-wrap';
+  wrap.innerHTML =
+    '<div class="clk-time" id="clk-time">--:--:--</div>' +
+    '<div class="clk-date" id="clk-date">—</div>' +
+    '<div class="clk-tz" id="clk-tz">—</div>' +
+    '<div class="clk-sw" id="clk-sw">00:00.0</div>' +
+    '<div style="display:flex;gap:6px;">' +
+      '<button class="clk-stop" id="clk-start">start</button>' +
+      '<button class="clk-stop" id="clk-reset">reset</button>' +
+    '</div>';
+  let int = null;
+  let swStart = null, swElapsed = 0, swRunning = false;
+
+  function tick() {
+    const now = new Date();
+    wrap.querySelector('#clk-time').textContent =
+      String(now.getHours()).padStart(2,'0') + ':' +
+      String(now.getMinutes()).padStart(2,'0') + ':' +
+      String(now.getSeconds()).padStart(2,'0');
+    wrap.querySelector('#clk-date').textContent =
+      now.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+    wrap.querySelector('#clk-tz').textContent =
+      Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (swRunning) {
+      const ms = swElapsed + (Date.now() - swStart);
+      const m = Math.floor(ms / 60000);
+      const s = Math.floor((ms % 60000) / 1000);
+      const t = Math.floor((ms % 1000) / 100);
+      wrap.querySelector('#clk-sw').textContent =
+        String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + '.' + t;
+    }
+  }
+  int = setInterval(tick, 100);
+  tick();
+
+  wrap.querySelector('#clk-start').addEventListener('click', (e) => {
+    if (!swRunning) { swStart = Date.now(); swRunning = true; e.target.textContent = 'stop'; }
+    else { swElapsed += Date.now() - swStart; swRunning = false; e.target.textContent = 'start'; }
+  });
+  wrap.querySelector('#clk-reset').addEventListener('click', () => {
+    swElapsed = 0; swRunning = false; swStart = null;
+    wrap.querySelector('#clk-start').textContent = 'start';
+    wrap.querySelector('#clk-sw').textContent = '00:00.0';
+  });
+
+  return { el: wrap, cleanup: () => { if (int) clearInterval(int); } };
+}
 
 /* ════════════════════════════════════════════════════════════
    MINIGAMES — Wordle · Sudoku · 2048 · Memory

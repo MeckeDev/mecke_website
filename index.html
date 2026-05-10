@@ -499,9 +499,12 @@
 
 <!-- ─────────────── PC / DESKTOP STAGE ─────────────── -->
 <div class="pc-stage" id="pc-stage">
+  <div class="pc-wallpaper" id="pc-wallpaper" data-wallpaper="aurora">
+    <div class="pc-wp-layer pc-wp-grain"></div>
+  </div>
   <div class="pc-boot" id="pc-boot" style="display:none;">
     <div class="brand">▣ MECKE OS</div>
-    <div class="ver">v1.0 · sandbox · static build</div>
+    <div class="ver">v1.1 · sandbox · static build</div>
     <div class="lines" id="pc-boot-lines"></div>
     <div class="progress"><div class="bar" id="pc-boot-bar"></div></div>
   </div>
@@ -516,14 +519,85 @@
       <div class="pc-icon" data-app="snake"    tabindex="0"><div class="glyph">~~</div><div class="label">Snake</div></div>
       <div class="pc-icon" data-app="mines"    tabindex="0"><div class="glyph">*</div><div class="label">Minesweeper</div></div>
       <div class="pc-icon" data-app="terminal" tabindex="0"><div class="glyph">$_</div><div class="label">Terminal</div></div>
+      <div class="pc-icon" data-app="browser"  tabindex="0"><div class="glyph">@</div><div class="label">Browser</div></div>
+      <div class="pc-icon" data-app="clock"    tabindex="0"><div class="glyph">⌚</div><div class="label">Clock</div></div>
+      <div class="pc-icon" data-app="settings" tabindex="0"><div class="glyph">⚙</div><div class="label">Settings</div></div>
       <div class="pc-icon" data-app="about"    tabindex="0"><div class="glyph">?</div><div class="label">About</div></div>
     </div>
+    <div class="pc-select-box" id="pc-select-box"></div>
     <div id="pc-windows"></div>
   </div>
-  <div class="pc-taskbar">
-    <button class="pc-tb-start">▣ MECKE OS</button>
+
+  <!-- start menu -->
+  <div class="pc-startmenu" id="pc-startmenu" aria-hidden="true">
+    <div class="pc-sm-head">
+      <div class="pc-sm-user">
+        <div class="pc-sm-avatar">M</div>
+        <div>
+          <div class="pc-sm-name">mecke</div>
+          <div class="pc-sm-host">mecke@os · v1.1</div>
+        </div>
+      </div>
+      <input type="text" class="pc-sm-search" id="pc-sm-search" placeholder="search apps & files…" />
+    </div>
+    <div class="pc-sm-body">
+      <div class="pc-sm-section-label">pinned</div>
+      <div class="pc-sm-grid" id="pc-sm-grid"></div>
+      <div class="pc-sm-section-label">recent</div>
+      <div class="pc-sm-recent" id="pc-sm-recent"></div>
+    </div>
+    <div class="pc-sm-foot">
+      <button class="pc-sm-foot-btn" data-sm-action="settings" title="settings">⚙</button>
+      <button class="pc-sm-foot-btn" data-sm-action="about"    title="about">?</button>
+      <button class="pc-sm-foot-btn" data-sm-action="lock"     title="lock screen">⏻</button>
+      <button class="pc-sm-foot-btn power" data-sm-action="exit" title="exit desktop">⏏ exit</button>
+    </div>
+  </div>
+
+  <!-- quick settings (bottom-right) -->
+  <div class="pc-quick" id="pc-quick" aria-hidden="true">
+    <div class="pc-quick-row">
+      <button class="pc-quick-tile" data-quick="net"><span class="i">⌬</span><span>online</span></button>
+      <button class="pc-quick-tile" data-quick="bt"><span class="i">∞</span><span>bluetooth</span></button>
+      <button class="pc-quick-tile" data-quick="dnd"><span class="i">○</span><span>do not disturb</span></button>
+      <button class="pc-quick-tile" data-quick="theme"><span class="i">◐</span><span>theme</span></button>
+    </div>
+    <div class="pc-quick-slider">
+      <label>volume</label>
+      <input type="range" id="pc-quick-vol" min="0" max="100" value="60" />
+      <span id="pc-quick-vol-val">60</span>
+    </div>
+    <div class="pc-quick-slider">
+      <label>brightness</label>
+      <input type="range" id="pc-quick-bri" min="40" max="100" value="100" />
+      <span id="pc-quick-bri-val">100</span>
+    </div>
+    <div class="pc-quick-foot">
+      <span class="pc-quick-date" id="pc-quick-date">—</span>
+      <button class="pc-quick-link" data-quick-link="settings">⚙ all settings</button>
+    </div>
+  </div>
+
+  <!-- desktop / window context menu -->
+  <div class="pc-ctx" id="pc-ctx" role="menu" aria-hidden="true"></div>
+
+  <!-- lock screen -->
+  <div class="pc-lock" id="pc-lock" aria-hidden="true">
+    <div class="pc-lock-time" id="pc-lock-time">--:--</div>
+    <div class="pc-lock-date" id="pc-lock-date">—</div>
+    <div class="pc-lock-hint">click anywhere or press any key to unlock</div>
+  </div>
+
+  <div class="pc-taskbar" id="pc-taskbar">
+    <button class="pc-tb-start" id="pc-tb-start">▣ MECKE OS</button>
+    <button class="pc-tb-show-desktop" id="pc-tb-show-desktop" title="show desktop">▭</button>
     <div class="pc-tb-tasks" id="pc-tb-tasks"></div>
-    <div class="pc-tb-clock" id="pc-tb-clock">--:--</div>
+    <div class="pc-tb-tray" id="pc-tb-tray">
+      <button class="pc-tb-tray-btn" data-tray="net"  title="network">⌬</button>
+      <button class="pc-tb-tray-btn" data-tray="vol"  title="volume">♪</button>
+      <button class="pc-tb-tray-btn" data-tray="bell" title="notifications"><span class="bell-dot"></span>◔</button>
+    </div>
+    <button class="pc-tb-clock" id="pc-tb-clock" title="quick settings">--:--</button>
   </div>
 </div>
 
